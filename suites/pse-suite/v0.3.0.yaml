@@ -1,0 +1,85 @@
+# Manifesto de capability da suíte pse-suite v0.3.0.
+#
+# Declara o que esta versão verificável da pse-suite realmente emite (capabilities[])
+# e o que ela planeja emitir no futuro (future_assertions[]). A distinção é o que
+# impede o catálogo de aprovar um controle com base em assertion que ainda não existe.
+#
+# Fontes verificáveis:
+#   - Tag: v0.3.0 (https://github.com/danzeroum/pse-suite/releases/tag/v0.3.0)
+#   - Commit: 6dad2fd7ce93262e7f5aa449fafbc3891dfbf038
+#   - Schema do laudo: laudo-pse-1.0
+#   - Catalog hash: 33d5be7e85777045d0088c3f5f7a91e394c83c4be33cfeda519b6073be0420e3
+#   - Manifesto de release: pse --manifesto (gerado a partir da própria árvore)
+#
+# Verificação realizada em 17/08/2026 por inspeção direta da tag v0.3.0 clonada
+# localmente. Nenhum assertivo de "main" ou branch em desenvolvimento foi usado.
+#
+# Schema: schemas/suite-capabilities.schema.json
+
+suite:
+  id: pse-suite
+  version: 0.3.0
+  commit: 6dad2fd7ce93262e7f5aa449fafbc3891dfbf038
+  source_schema: laudo-pse-1.0
+  catalog_hash: "sha256:33d5be7e85777045d0088c3f5f7a91e394c83c4be33cfeda519b6073be0420e3"
+  release_verified: true
+  verified_at: "2026-08-17"
+
+  # 30 checks implementados na release v0.3.0.
+  # IDs seguem o padrão da pse-suite: P-NN (privacy), S-NN (security), E-NN (ethics).
+  # Nenhum ID PSE-DEP-* é emitido por esta release — essas são future_assertions.
+  capabilities:
+    # --- Pacote Privacy (11 checks) ---
+    - {id: P-01, kind: check, status: implemented, capability: privacy.log-pii-masking}
+    - {id: P-02, kind: check, status: implemented, capability: privacy.retention-purge-job}
+    - {id: P-03, kind: check, status: implemented, capability: privacy.soft-delete-elimination}
+    - {id: P-04, kind: check, status: implemented, capability: privacy.data-catalog-liveness}
+    - {id: P-05, kind: check, status: implemented, capability: privacy.dto-minimization}
+    - {id: P-06, kind: check, status: implemented, capability: privacy.pseudonymization-key-segregation}
+    - {id: P-07, kind: check, status: implemented, capability: privacy.consent-granularity}
+    - {id: P-08, kind: check, status: implemented, capability: privacy.sensitive-legal-basis}
+    - {id: P-09, kind: check, status: implemented, capability: privacy.k-anonymity}
+    - {id: P-10, kind: check, status: implemented, capability: privacy.portability-endpoint}
+    - {id: P-11, kind: check, status: implemented, capability: privacy.oracle-resource}
+
+    # --- Pacote Security (8 checks) ---
+    - {id: S-01, kind: check, status: implemented, capability: security.bola-idor}
+    - {id: S-02, kind: check, status: implemented, capability: security.rate-limit}
+    - {id: S-03, kind: check, status: implemented, capability: security.pii-in-error}
+    - {id: S-04, kind: check, status: implemented, capability: security.third-party-dpa}
+    - {id: S-05, kind: check, status: implemented, capability: security.egress-payload}
+    - {id: S-06, kind: check, status: implemented, capability: security.hardcoded-credential}
+    - {id: S-07, kind: check, status: implemented, capability: security.purpose-audit-log}
+    - {id: S-08, kind: check, status: implemented, capability: security.international-transfer}
+
+    # --- Pacote Ethics (11 checks, E-00 a E-10) ---
+    - {id: E-00, kind: check, status: implemented, capability: ethics.automated-decision-scope}
+    - {id: E-01, kind: check, status: implemented, capability: ethics.decision-explanation}
+    - {id: E-02, kind: check, status: implemented, capability: ethics.decision-log}
+    - {id: E-03, kind: check, status: implemented, capability: ethics.contestation-endpoint}
+    - {id: E-04, kind: check, status: implemented, capability: ethics.human-in-the-loop}
+    - {id: E-05, kind: check, status: implemented, capability: ethics.discrimination-proxy}
+    - {id: E-06, kind: check, status: implemented, capability: ethics.fairness-disparity}
+    - {id: E-07, kind: check, status: implemented, capability: ethics.model-card}
+    - {id: E-08, kind: check, status: implemented, capability: ethics.lineage-traceability}
+    - {id: E-09, kind: check, status: implemented, capability: ethics.kill-switch}
+    - {id: E-10, kind: check, status: implemented, capability: ethics.uncertainty-quantification}
+
+  # Assertions planejadas mas NÃO emitidas por esta release.
+  # Não podem satisfazer controle ativo (blocking_eligible: false sempre).
+  # Quando o adapter PSE para evidence-bundle/v1 existir (M3 do plano),
+  # estas assertions podem migrar para capabilities[] com status: implemented.
+  future_assertions:
+    - id: PSE-DEP-INVENTORY-MATCH
+      status: planned
+      source: future-evidence-bundle-adapter
+      blocking_eligible: false
+      target_contract: evidence-bundle/v1
+      planned_for_version: 0.4.0
+
+    - id: PSE-DEP-VULNERABILITY-SCAN
+      status: planned
+      source: future-evidence-bundle-adapter
+      blocking_eligible: false
+      target_contract: evidence-bundle/v1
+      planned_for_version: 0.4.0

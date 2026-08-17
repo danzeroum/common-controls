@@ -1,0 +1,25 @@
+# Fixture INVÁLIDA — assessment satisfied sem provenance completa.
+# O schema exige bloco provenance com source_kind, source_id, source_version,
+# source_commit, source_schema, artifact_hash, generated_at, subject_commit,
+# subject_tree_hash, scope_fingerprint, validator, validator_version,
+# catalog_commit. Esta fixture omite a maioria — deve falhar.
+control_assessment:
+  control_id: CTRL-DEP-001
+  status: satisfied
+  assessed_at: "2026-08-17T12:00:00Z"
+  subject_fingerprint: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  evidence:
+    - source: pse-suite
+      assertion: PSE-DEP-INVENTORY-MATCH
+      status: passed
+      freshness_days: 1
+      fingerprint: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  reasons:
+    - code: all_evidence_passed
+      message: "Evidência passou mas provenance está incompleta."
+  provenance:
+    source_kind: suite_bundle
+    source_id: pse-suite
+    # Faltam: source_version, source_commit, source_schema, artifact_hash,
+    # generated_at, subject_commit, subject_tree_hash, scope_fingerprint,
+    # validator, validator_version, catalog_commit

@@ -1,0 +1,18 @@
+# Dependências de desenvolvimento e teste do catálogo common-controls.
+#
+# PIN EXATO (==) para reprodutibilidade. Inclui as dependências de runtime
+# (requirements.txt) e pytest para executar a bateria de testes.
+#
+# Instalação:
+#   pip install -r requirements-dev.txt
+#
+# Para gerar hashes verificáveis (futuro):
+#   pip-compile --generate-hashes requirements-dev.in -o requirements-dev.txt
+#
+# A Sprint 2 optou por pin exato sem hashes por ora. Hashes podem ser
+# adicionados em Sprint 3 quando pip-tools for introduzido como dependência
+# de desenvolvimento.
+
+-r requirements.txt
+
+pytest==9.0.2

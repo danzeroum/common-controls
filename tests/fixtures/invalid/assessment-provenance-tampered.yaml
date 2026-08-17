@@ -1,6 +1,7 @@
 # Fixture INVÁLIDA — assessment com provenance adulterada.
-# catalog_commit não segue ^[0-9a-f]{40}$ (apenas 7 hex chars).
-# subject_fingerprint não segue ^sha256:[0-9a-f]{64}$.
+# subject_fingerprint não segue ^sha256:[0-9a-f]{64}$ (apenas "sha256:BAD").
+# source_commit não segue ^[0-9a-f]{40}$ (apenas "abc1234").
+# artifact_hash não segue ^sha256:[0-9a-f]{64}$.
 control_assessment:
   control_id: CTRL-DEP-001
   status: not_satisfied
@@ -11,7 +12,17 @@ control_assessment:
     - code: missing_required_evidence
       message: "Evidência obrigatória ausente."
   provenance:
+    source_kind: suite_bundle
+    source_id: pse-suite
+    source_version: 0.3.0
+    source_commit: "abc1234"
+    source_schema: laudo-pse-1.0
+    artifact_hash: "sha256:TAMPERED"
+    generated_at: "2026-08-17T11:55:00Z"
+    subject_commit: "short"
+    subject_tree_hash: "alsoshort"
+    scope_fingerprint: "sha256:ALSOBAD"
     validator: ci/validate_catalog.py
     validator_version: 0.1.0
-    catalog_commit: "abc1234"
+    catalog_commit: "cccccccccccccccccccccccccccccccccccccccc"
     catalog_version: 0.1.0

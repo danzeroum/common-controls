@@ -6,6 +6,12 @@ control:
     tenham responsável e finalidade declarados e sejam avaliadas quanto
     a vulnerabilidades conhecidas.
 
+  # lifecycle: planned porque required_evidence referencia assertions PSE-DEP-*
+  # que estão em lifecycle=planned no manifesto da suíte v0.3.0. Quando o adapter
+  # PSE para evidence-bundle/v1 existir (M3 do plano), as assertions migram para
+  # implemented e este controle pode migrar para lifecycle=active.
+  lifecycle: planned
+
   required_evidence:
     all_of:
       - source: pse-suite

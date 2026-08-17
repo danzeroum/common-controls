@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://danzeroum.github.io/common-controls/schemas/control-assessment.schema.json",
   "title": "Control assessment",
-  "description": "Avaliação declarativa e validável de um controle para um sujeito (repositório/commit). Não integra com PSE real na Sprint 1; serve para validar o modelo de avaliação: estados permitidos, exigência de evidência positiva para 'satisfied', e prova de integridade para proveniência.",
+  "description": "Avaliação declarativa e validável de um controle para um sujeito (repositório/commit). Exige provenância completa: source_kind, source_id, source_version, source_commit, source_schema, artifact_hash, generated_at, subject_commit, subject_tree_hash, scope_fingerprint. Sem isto, a avaliação não é reproduzível e não pode ser aceita como evidência.",
   "type": "object",
   "required": ["control_assessment"],
   "additionalProperties": false,
@@ -98,7 +98,8 @@
                   "subject_mismatch",
                   "contract_incompatible",
                   "declared_not_applicable",
-                  "integrity_blocked"
+                  "integrity_blocked",
+                  "planned_assertion_not_yet_emitted"
                 ]
               },
               "message": {
@@ -114,14 +115,78 @@
         },
         "provenance": {
           "type": "object",
-          "required": ["validator", "validator_version", "catalog_commit"],
+          "required": [
+            "source_kind",
+            "source_id",
+            "source_version",
+            "source_commit",
+            "source_schema",
+            "artifact_hash",
+            "generated_at",
+            "subject_commit",
+            "subject_tree_hash",
+            "scope_fingerprint",
+            "validator",
+            "validator_version",
+            "catalog_commit"
+          ],
           "additionalProperties": false,
-          "description": "Proveniência da avaliação: quem validou, com qual versão, contra qual commit do catálogo. Sem isto, a avaliação não é reproduzível.",
+          "description": "Provenância completa da avaliação. Sem qualquer um destes campos, a avaliação não é reproduzível e não pode ser aceita como evidência positiva.",
           "properties": {
+            "source_kind": {
+              "type": "string",
+              "enum": ["suite_bundle", "project_artifact", "manual_review"],
+              "description": "Tipo de fonte: suite_bundle = laudo de suíte externa; project_artifact = artefato declarativo no project; manual_review = revisão humana."
+            },
+            "source_id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ID da fonte (ex.: pse-suite, qa-suite, project)."
+            },
+            "source_version": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+              "description": "Versão semântica da fonte. Para suite_bundle, é a versão da suíte (ex.: 0.3.0)."
+            },
+            "source_commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$",
+              "description": "SHA do commit da fonte. Para suite_bundle, é o commit da suíte na versão declarada."
+            },
+            "source_schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Schema de origem (ex.: laudo-pse-1.0)."
+            },
+            "artifact_hash": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "description": "Hash SHA-256 do artefato de evidência (laudo, bundle, etc.). Vincula a avaliação ao conteúdo exato da evidência."
+            },
+            "generated_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Timestamp ISO 8601 UTC de quando a evidência foi gerada (não confundir com assessed_at)."
+            },
+            "subject_commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$",
+              "description": "SHA do commit do sujeito avaliado (o repo consumidor)."
+            },
+            "subject_tree_hash": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$",
+              "description": "Tree hash do commit do sujeito. Diferente do commit SHA — é o hash da árvore, que muda se qualquer arquivo mudar."
+            },
+            "scope_fingerprint": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "description": "Hash do escopo avaliado (ex.: paths incluídos, configuração de campanha). Vincula a avaliação ao escopo exato."
+            },
             "validator": {
               "type": "string",
               "minLength": 1,
-              "description": "Nome do validador (ex.: ci/validate_catalog.py)."
+              "description": "Nome do validador que produziu o assessment (ex.: ci/validate_catalog.py)."
             },
             "validator_version": {
               "type": "string",

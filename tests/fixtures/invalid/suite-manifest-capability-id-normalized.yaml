@@ -1,0 +1,16 @@
+# Fixture INVÁLIDA — manifesto com capability id que parece assertion normalizada.
+# capabilities[] deve conter IDs de check publicado (P-01, S-04, E-08).
+# PSE-DEP-INVENTORY-MATCH aqui é erro — pertence a future_assertions[].
+suite:
+  id: pse-suite
+  version: 0.3.0
+  commit: "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038"
+  source_schema: laudo-pse-1.0
+  release_verified: true
+  verified_at: "2026-08-17"
+  capabilities:
+    - id: PSE-DEP-INVENTORY-MATCH
+      kind: check
+      status: implemented
+      capability: security.dependency-inventory
+  future_assertions: []

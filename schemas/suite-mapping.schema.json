@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://danzeroum.github.io/common-controls/schemas/suite-mapping.schema.json",
   "title": "Suite mapping (assertions → capabilities)",
-  "description": "Mapeia IDs de assertions emitidas por uma suíte para capabilities técnicas. A suíte não conhece CTRL-* nem ISO — ela emite fatos com IDs próprios; o mapping apenas documenta quais capabilities cada assertion cobre e quais status são aceitos como evidência positiva.",
+  "description": "Mapeia IDs de assertions emitidas por uma suíte para capabilities técnicas. A suíte não conhece CTRL-* nem ISO — ela emite fatos com IDs próprios; o mapping apenas documenta quais capabilities cada assertion cobre, qual o lifecycle (implemented/planned), e quais status são aceitos como evidência positiva.",
   "type": "object",
   "required": ["suite_mapping"],
   "additionalProperties": false,
@@ -15,7 +15,7 @@
         "suite_id": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9-]*$",
-          "description": "ID da suíte. Ex.: pse-suite, qa-suite."
+          "description": "ID da suíte. Ex.: pse-suite, qa-suite. Deve bater com o id no manifesto em suites/<suite_id>/<version>.yaml."
         },
         "contract_version": {
           "type": "string",
@@ -25,7 +25,12 @@
         "source_schema": {
           "type": "string",
           "minLength": 1,
-          "description": "Schema do laudo de origem (ex.: laudo-pse-1.0)."
+          "description": "Schema do laudo de origem (ex.: laudo-pse-1.0). Deve bater com o source_schema no manifesto da suíte."
+        },
+        "suite_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "description": "Versão verificável da suíte cujo manifesto em suites/<suite_id>/<suite_version>.yaml valida as assertions deste mapping. Obrigatório para que o validador de compatibilidade resolva o manifesto."
         },
         "assertions": {
           "type": "array",
@@ -33,7 +38,7 @@
           "description": "Lista de assertions mapeadas. Não pode ser vazia: mapping sem assertions é redundante com a ausência de mapping.",
           "items": {
             "type": "object",
-            "required": ["id", "capability", "description"],
+            "required": ["id", "capability", "description", "lifecycle", "blocking_eligible"],
             "additionalProperties": false,
             "properties": {
               "id": {
@@ -50,8 +55,56 @@
                 "type": "string",
                 "minLength": 10,
                 "description": "Descrição legível do que a assertion verifica. Mínimo 10 caracteres para evitar placeholder."
+              },
+              "lifecycle": {
+                "type": "string",
+                "enum": ["implemented", "planned", "draft", "withdrawn"],
+                "description": "implemented = assertion é emitida por release verificável da suíte (elegível para satisfazer controle ativo). planned = intenção declarada no manifesto da suíte mas não emitida (NÃO elegível para controle ativo). draft = em desenvolvimento. withdrawn = abandonada."
+              },
+              "blocking_eligible": {
+                "type": "boolean",
+                "description": "true = assertion pode satisfazer controle bloqueante (exige lifecycle=implemented). false = assertion não pode satisfazer controle bloqueante (lifecycle=planned/draft/withdrawn)."
+              },
+              "requires_adapter": {
+                "type": "object",
+                "description": "Obrigatório quando lifecycle != implemented. Declara qual adapter futuro produzirá esta assertion.",
+                "required": ["source_schema", "target_contract"],
+                "additionalProperties": false,
+                "properties": {
+                  "source_schema": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Schema de origem que o adapter consome (ex.: laudo-pse-1.0)."
+                  },
+                  "target_contract": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Contrato alvo que o adapter produz (ex.: evidence-bundle/v1)."
+                  }
+                }
               }
-            }
+            },
+            "allOf": [
+              {
+                "description": "lifecycle != implemented exige requires_adapter. Uma assertion planejada sem adapter declarado é ambígua — não se sabe de onde virá.",
+                "if": {
+                  "properties": {"lifecycle": {"enum": ["planned", "draft", "withdrawn"]}}
+                },
+                "then": {"required": ["requires_adapter"]}
+              },
+              {
+                "description": "blocking_eligible=true exige lifecycle=implemented. Assertion planejada nunca pode bloquear.",
+                "if": {"properties": {"blocking_eligible": {"const": true}}},
+                "then": {"properties": {"lifecycle": {"const": "implemented"}}}
+              },
+              {
+                "description": "blocking_eligible=false é obrigatório quando lifecycle != implemented.",
+                "if": {
+                  "properties": {"lifecycle": {"enum": ["planned", "draft", "withdrawn"]}}
+                },
+                "then": {"properties": {"blocking_eligible": {"const": false}}}
+              }
+            ]
           }
         },
         "result_policy": {

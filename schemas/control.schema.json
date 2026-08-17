@@ -9,7 +9,7 @@
   "properties": {
     "control": {
       "type": "object",
-      "required": ["id", "title", "purpose", "required_evidence", "evaluation", "exceptions"],
+      "required": ["id", "title", "purpose", "lifecycle", "required_evidence", "evaluation", "exceptions"],
       "additionalProperties": false,
       "properties": {
         "id": {
@@ -26,6 +26,11 @@
           "type": "string",
           "minLength": 1,
           "description": "Por que este controle existe. Frase declarativa, não lista de requisitos."
+        },
+        "lifecycle": {
+          "type": "string",
+          "enum": ["active", "planned", "deprecated"],
+          "description": "active = controle em uso, elegível para satisfazer profile ISO. planned = controle declarado mas depende de assertion planejada (não pode ser 'satisfied' até adapter existir). deprecated = marcado para remoção. Um controle que exige assertion 'planned' deve ter lifecycle=planned (validador de compatibilidade cobra)."
         },
         "required_evidence": {
           "type": "object",

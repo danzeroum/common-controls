@@ -1,15 +1,23 @@
-# Fixture válida — mapping PSE com duas assertions e política fail-closed.
+# Fixture válida — mapping PSE com duas assertions PLANEJADAS e política fail-closed.
 # Cópia canônica do mapping real (mappings/pse-suite.yaml).
+# Cada assertion declara lifecycle=planned e blocking_eligible=false porque
+# a release v0.3.0 da pse-suite não emite estes IDs (são future_assertions).
 suite_mapping:
   suite_id: pse-suite
   contract_version: "1.0"
   source_schema: laudo-pse-1.0
+  suite_version: "0.3.0"
   assertions:
     - id: PSE-DEP-INVENTORY-MATCH
       capability: security.dependency-inventory
       description: >-
         O inventário local de dependências é consistente com os manifestos
         de dependência incluídos no escopo avaliado.
+      lifecycle: planned
+      blocking_eligible: false
+      requires_adapter:
+        source_schema: laudo-pse-1.0
+        target_contract: evidence-bundle/v1
 
     - id: PSE-DEP-VULNERABILITY-SCAN
       capability: security.dependency-vulnerability-scan
@@ -17,6 +25,11 @@ suite_mapping:
         A varredura de vulnerabilidades de dependências foi executada no
         escopo declarado e não encontrou vulnerabilidade acima do limiar
         adotado pelo projeto consumidor.
+      lifecycle: planned
+      blocking_eligible: false
+      requires_adapter:
+        source_schema: laudo-pse-1.0
+        target_contract: evidence-bundle/v1
 
   result_policy:
     accepted_assertion_statuses:

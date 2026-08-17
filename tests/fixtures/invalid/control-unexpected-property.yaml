@@ -6,6 +6,7 @@ control:
   title: Controle com propriedade inesperada
   purpose: >-
     Documento fechado rejeita campos não declarados no schema.
+  lifecycle: active
   required_evidence:
     all_of:
       - source: pse-suite
