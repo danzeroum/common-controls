@@ -1,0 +1,16 @@
+# Fixture válida — assessment blocked por provenance inválida.
+# Prova que o modelo aceita blocked com razão de integridade.
+control_assessment:
+  control_id: CTRL-DEP-001
+  status: blocked
+  assessed_at: "2026-08-17T12:00:00Z"
+  subject_fingerprint: "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+  evidence: []
+  reasons:
+    - code: provenance_invalid
+      message: "Evidência recebida sem fingerprint de bundle; proveniência não verificável."
+  provenance:
+    validator: ci/validate_catalog.py
+    validator_version: 0.1.0
+    catalog_commit: "0000000000000000000000000000000000000000"
+    catalog_version: 0.1.0

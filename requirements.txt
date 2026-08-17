@@ -1,0 +1,15 @@
+# Dependências de validação do catálogo common-controls.
+#
+# Justificativa:
+# - pyyaml: stdlib Python não inclui parser YAML. O catálogo, controles e
+#   mappings são YAML. Sem pyyaml, não há validação possível.
+# - jsonschema: validação dos schemas JSON Draft 2020-12. Implementar
+#   validador JSON Schema customizado em stdlib é impraticável e propenso a
+#   erro; jsonschema é a implementação canônica usada por pse-suite e
+#   project.
+#
+# Ambas as dependências já são consumidas pelo ecossistema danzeroum.
+# Nenhum download em tempo de teste, nenhuma chamada de rede.
+
+pyyaml>=6.0
+jsonschema>=4.18

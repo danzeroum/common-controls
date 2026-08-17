@@ -1,0 +1,21 @@
+# Fixture INVÁLIDA — control ID malformado (não segue ^CTRL-[A-Z]+-[0-9]{3}$).
+# Deve falhar tanto no schema quanto na checagem estrutural do validador.
+control:
+  id: ctrl-dep-1
+  title: ID malformado
+  purpose: >-
+    IDs de controle devem seguir ^CTRL-[A-Z]+-[0-9]{3}$.
+  required_evidence:
+    all_of:
+      - source: pse-suite
+        assertion: PSE-DEP-INVENTORY-MATCH
+        expected_status: passed
+        freshness_days: 7
+  evaluation:
+    missing_evidence: not_satisfied
+    errored_evidence: not_satisfied
+    expired_evidence: not_satisfied
+    skipped_evidence: not_satisfied
+    not_assessed_evidence: not_satisfied
+  exceptions:
+    allowed: false

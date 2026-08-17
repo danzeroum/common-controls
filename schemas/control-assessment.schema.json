@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://danzeroum.github.io/common-controls/schemas/control-assessment.schema.json",
+  "title": "Control assessment",
+  "description": "Avaliação declarativa e validável de um controle para um sujeito (repositório/commit). Não integra com PSE real na Sprint 1; serve para validar o modelo de avaliação: estados permitidos, exigência de evidência positiva para 'satisfied', e prova de integridade para proveniência.",
+  "type": "object",
+  "required": ["control_assessment"],
+  "additionalProperties": false,
+  "properties": {
+    "control_assessment": {
+      "type": "object",
+      "required": [
+        "control_id",
+        "status",
+        "assessed_at",
+        "subject_fingerprint",
+        "evidence",
+        "reasons",
+        "provenance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "control_id": {
+          "type": "string",
+          "pattern": "^CTRL-[A-Z]+-[0-9]{3}$",
+          "description": "ID do controle avaliado. Deve existir no catálogo."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["satisfied", "partially_satisfied", "not_satisfied", "not_applicable", "blocked"],
+          "description": "satisfied = toda evidência obrigatória passou; partially_satisfied = parte passou, parte não; not_satisfied = obrigatória falhou; not_applicable = declarado pelo projeto; blocked = falha de integridade/proveniência/contrato."
+        },
+        "assessed_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp ISO 8601 UTC."
+        },
+        "subject_fingerprint": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "Hash sha256 do sujeito avaliado (ex.: tree hash do commit + scope fingerprint). Vincula a avaliação a um estado imutável."
+        },
+        "evidence": {
+          "type": "array",
+          "description": "Lista de itens de evidência avaliados. Pode ser vazia — nesse caso status só pode ser not_satisfied, not_applicable ou blocked (nunca satisfied).",
+          "items": {
+            "type": "object",
+            "required": ["source", "assertion", "status"],
+            "additionalProperties": false,
+            "properties": {
+              "source": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Fonte da evidência (ex.: pse-suite, qa-suite, project)."
+              },
+              "assertion": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(-[A-Z0-9]+)+$",
+                "description": "ID da assertion avaliada."
+              },
+              "status": {
+                "type": "string",
+                "enum": ["passed", "failed", "skipped", "errored", "not_assessed"],
+                "description": "Estado da assertion. Apenas 'passed' conta como evidência positiva."
+              },
+              "freshness_days": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Idade da evidência em dias. Se maior que o freshness_days exigido pelo controle, deve ser tratada como expirada."
+              },
+              "fingerprint": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$",
+                "description": "Hash do conteúdo da evidência. Obrigatório quando status='passed' — sem fingerprint, evidência não tem integridade verificável."
+              }
+            }
+          }
+        },
+        "reasons": {
+          "type": "array",
+          "description": "Razões humanas e técnicas que justificam o status. Obrigatório quando status ≠ satisfied — sem razão, decisão não é auditável.",
+          "items": {
+            "type": "object",
+            "required": ["code", "message"],
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "all_evidence_passed",
+                  "missing_required_evidence",
+                  "evidence_failed",
+                  "evidence_skipped",
+                  "evidence_errored",
+                  "evidence_not_assessed",
+                  "evidence_expired",
+                  "provenance_invalid",
+                  "subject_mismatch",
+                  "contract_incompatible",
+                  "declared_not_applicable",
+                  "integrity_blocked"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "minLength": 5
+              },
+              "ref": {
+                "type": "string",
+                "description": "Referência opcional para ID de assertion ou artifact relacionado."
+              }
+            }
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "required": ["validator", "validator_version", "catalog_commit"],
+          "additionalProperties": false,
+          "description": "Proveniência da avaliação: quem validou, com qual versão, contra qual commit do catálogo. Sem isto, a avaliação não é reproduzível.",
+          "properties": {
+            "validator": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Nome do validador (ex.: ci/validate_catalog.py)."
+            },
+            "validator_version": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+            },
+            "catalog_commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$",
+              "description": "SHA do commit do catálogo common-controls usado na avaliação."
+            },
+            "catalog_version": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "description": "satisfied exige ao menos uma evidência passed e razão all_evidence_passed.",
+          "if": {"properties": {"status": {"const": "satisfied"}}},
+          "then": {
+            "properties": {
+              "evidence": {
+                "minItems": 1,
+                "description": "satisfied sem evidência é vedado: ausência de finding não é conformidade."
+              },
+              "reasons": {
+                "contains": {
+                  "properties": {"code": {"const": "all_evidence_passed"}}
+                }
+              }
+            }
+          }
+        },
+        {
+          "description": "blocked exige razão de integridade/proveniência/contrato.",
+          "if": {"properties": {"status": {"const": "blocked"}}},
+          "then": {
+            "properties": {
+              "reasons": {
+                "contains": {
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "provenance_invalid",
+                        "subject_mismatch",
+                        "contract_incompatible",
+                        "integrity_blocked"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "description": "not_applicable exige razão declarada.",
+          "if": {"properties": {"status": {"const": "not_applicable"}}},
+          "then": {
+            "properties": {
+              "reasons": {
+                "contains": {
+                  "properties": {"code": {"const": "declared_not_applicable"}}
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

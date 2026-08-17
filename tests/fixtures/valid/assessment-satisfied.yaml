@@ -1,0 +1,31 @@
+# Fixture válida — assessment satisfied com evidência passed e provenance íntegra.
+# Prova que o modelo de assessment aceita o caminho feliz.
+control_assessment:
+  control_id: CTRL-DEP-001
+  status: satisfied
+  assessed_at: "2026-08-17T12:00:00Z"
+  subject_fingerprint: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  evidence:
+    - source: pse-suite
+      assertion: PSE-DEP-INVENTORY-MATCH
+      status: passed
+      freshness_days: 1
+      fingerprint: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    - source: pse-suite
+      assertion: PSE-DEP-VULNERABILITY-SCAN
+      status: passed
+      freshness_days: 1
+      fingerprint: "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    - source: project
+      assertion: PROJECT-DEP-LOCAL-VALIDATED
+      status: passed
+      freshness_days: 0
+      fingerprint: "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+  reasons:
+    - code: all_evidence_passed
+      message: "Todas as evidências obrigatórias foram avaliadas como passed."
+  provenance:
+    validator: ci/validate_catalog.py
+    validator_version: 0.1.0
+    catalog_commit: "0000000000000000000000000000000000000000"
+    catalog_version: 0.1.0

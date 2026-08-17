@@ -1,0 +1,23 @@
+# Fixture INVÁLIDA — propriedade inesperada em documento fechado.
+# control.schema.json tem additionalProperties: false. O campo 'secret_bypass'
+# não é conhecido e deve ser rejeitado.
+control:
+  id: CTRL-DEP-001
+  title: Controle com propriedade inesperada
+  purpose: >-
+    Documento fechado rejeita campos não declarados no schema.
+  required_evidence:
+    all_of:
+      - source: pse-suite
+        assertion: PSE-DEP-INVENTORY-MATCH
+        expected_status: passed
+        freshness_days: 7
+  evaluation:
+    missing_evidence: not_satisfied
+    errored_evidence: not_satisfied
+    expired_evidence: not_satisfied
+    skipped_evidence: not_satisfied
+    not_assessed_evidence: not_satisfied
+  exceptions:
+    allowed: false
+  secret_bypass: true

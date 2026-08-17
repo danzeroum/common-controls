@@ -1,0 +1,11 @@
+# Fixture INVÁLIDA — catálogo aponta para path inexistente.
+# O validador deve detectar PATH-NOT-FOUND.
+catalog:
+  id: fixture-invalid-path
+  version: 0.1.0
+  contract_version: "1.0"
+  control_schema: schemas/control.schema.json
+  controls:
+    - id: CTRL-DEP-001
+      path: controls/does-not-exist.yaml
+  mappings: []

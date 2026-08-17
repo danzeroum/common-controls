@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://danzeroum.github.io/common-controls/schemas/control-catalog.schema.json",
+  "title": "Control catalog index",
+  "description": "Índice do catálogo de controles. Referencia arquivos de controle e arquivos de mapping por caminho. Caminhos inexistentes, IDs duplicados ou controles sem mapping são rejeitados pelo validador.",
+  "type": "object",
+  "required": ["catalog"],
+  "additionalProperties": false,
+  "properties": {
+    "catalog": {
+      "type": "object",
+      "required": ["id", "version", "contract_version", "control_schema", "controls", "mappings"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "ID do catálogo. Kebab-case. Ex.: danzeroum-common-controls."
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "description": "Versão semântica do catálogo (X.Y.Z)."
+        },
+        "contract_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$",
+          "description": "Versão do contrato de evidência comum (X.Y)."
+        },
+        "control_schema": {
+          "type": "string",
+          "const": "schemas/control.schema.json",
+          "description": "Caminho canônico do schema de controle. Fixo para esta versão do catálogo."
+        },
+        "controls": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Lista de controles do catálogo. Não pode ser vazia: catálogo sem controles é configuração decorativa.",
+          "items": {
+            "type": "object",
+            "required": ["id", "path"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^CTRL-[A-Z]+-[0-9]{3}$"
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^controls/.+\\.yaml$",
+                "description": "Caminho do arquivo YAML do controle, relativo à raiz do repositório."
+              }
+            }
+          }
+        },
+        "mappings": {
+          "type": "array",
+          "description": "Lista de mappings suite → assertions. Pode ser vazia (catálogo antes de integração com suítes), mas cada entrada precisa ser válida.",
+          "items": {
+            "type": "object",
+            "required": ["suite", "path"],
+            "additionalProperties": false,
+            "properties": {
+              "suite": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^mappings/.+\\.yaml$"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

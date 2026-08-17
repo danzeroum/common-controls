@@ -1,0 +1,15 @@
+# Fixture INVÁLIDA — controle sem required_evidence (campo obrigatório omitido).
+# Deve falhar no schema control.schema.json (required: [required_evidence]).
+control:
+  id: CTRL-DEP-001
+  title: Controle sem evidência obrigatória
+  purpose: >-
+    Controle que não declara required_evidence é configuração decorativa.
+  evaluation:
+    missing_evidence: not_satisfied
+    errored_evidence: not_satisfied
+    expired_evidence: not_satisfied
+    skipped_evidence: not_satisfied
+    not_assessed_evidence: not_satisfied
+  exceptions:
+    allowed: false

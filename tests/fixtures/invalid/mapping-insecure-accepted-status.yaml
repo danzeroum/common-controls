@@ -1,0 +1,19 @@
+# Fixture INVÁLIDA — mapping com política insegura (aceita skipped como aprovado).
+# O validador deve detectar INSECURE-ACCEPTED-STATUS.
+suite_mapping:
+  suite_id: pse-suite
+  contract_version: "1.0"
+  source_schema: laudo-pse-1.0
+  assertions:
+    - id: PSE-DEP-INVENTORY-MATCH
+      capability: security.dependency-inventory
+      description: >-
+        Inventário local consistente com manifestos.
+  result_policy:
+    accepted_assertion_statuses:
+      - passed
+      - skipped
+    rejected_assertion_statuses:
+      - failed
+      - errored
+      - not_assessed
