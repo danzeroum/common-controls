@@ -1,21 +1,22 @@
 # Fixture válida — assessment satisfied com evidência passed e provenance íntegra.
 # Prova que o modelo de assessment aceita o caminho feliz com provenance completa.
+#
+# IMPORTANTE: esta fixture usa assertion P-01 (PII em logs) que é IMPLEMENTED
+# na release PSE v0.3.0 (capability implemented no manifesto). NÃO usa PSE-DEP-*
+# porque estas são PLANNED e não podem satisfazer controle (regra
+# PLANNED-ASSERTION-PROMOTED). O control_id é hipotético CTRL-TEST-001 para
+# não conflitar com CTRL-DEP-001 que exige assertions planejadas.
 control_assessment:
-  control_id: CTRL-DEP-001
+  control_id: CTRL-TEST-001
   status: satisfied
   assessed_at: "2026-08-17T12:00:00Z"
   subject_fingerprint: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
   evidence:
     - source: pse-suite
-      assertion: PSE-DEP-INVENTORY-MATCH
+      assertion: P-01
       status: passed
       freshness_days: 1
       fingerprint: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
-    - source: pse-suite
-      assertion: PSE-DEP-VULNERABILITY-SCAN
-      status: passed
-      freshness_days: 1
-      fingerprint: "sha256:2222222222222222222222222222222222222222222222222222222222222222"
     - source: project
       assertion: PROJECT-DEP-LOCAL-VALIDATED
       status: passed

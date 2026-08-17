@@ -1,0 +1,22 @@
+# Fixture INVÁLIDA — evidence-input sem hash, commit e scope do sujeito.
+# O schema exige subject.commit, subject.tree_hash, subject.scope_fingerprint
+# e integrity.canonical_hash. Esta fixture omite todos — deve falhar no schema.
+evidence_input:
+  schema_version: evidence-input/v0.1
+  producer:
+    suite_id: pse-suite
+    suite_version: 0.3.0
+    suite_commit: "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038"
+    source_schema: laudo-pse-1.0
+    catalog_hash: "sha256:33d5be7e85777045d0088c3f5f7a91e394c83c4be33cfeda519b6073be0420e3"
+    local_execution: false
+  subject:
+    repository: danzeroum/project
+    # Faltam: commit, tree_hash, target_lock_hash, scope_fingerprint
+  assertions:
+    - id: P-01
+      status: passed
+      evidence_fingerprint: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      capability: privacy.log-pii-masking
+      executed_at: "2026-08-17T11:55:00Z"
+  # integrity ausente

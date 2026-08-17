@@ -2,7 +2,7 @@
 # O schema control-assessment.schema.json deve rejeitar: satisfied exige
 # evidence minItems=1 e reasons contendo all_evidence_passed.
 control_assessment:
-  control_id: CTRL-DEP-001
+  control_id: CTRL-TEST-001
   status: satisfied
   assessed_at: "2026-08-17T12:00:00Z"
   subject_fingerprint: "sha256:5555555555555555555555555555555555555555555555555555555555555555"
