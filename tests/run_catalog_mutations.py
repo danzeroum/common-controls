@@ -431,10 +431,9 @@ def m18_workflow_removes_mutation_step(tmp_path: Path) -> Path:
     """M18: workflow remove etapa de mutação.
 
     Modifica .github/workflows/validate.yml para remover o passo
-    'Run catalog mutations'. O teste estático deve detectar.
+    de mutações. O teste estático deve detectar.
     """
     repo = base_repo(tmp_path)
-    # Copia o workflow real
     wf_dir = repo / ".github" / "workflows"
     wf_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy(REPO / ".github" / "workflows" / "validate.yml",
@@ -442,14 +441,14 @@ def m18_workflow_removes_mutation_step(tmp_path: Path) -> Path:
     wf_path = wf_dir / "validate.yml"
     text = wf_path.read_text(encoding="utf-8")
     # Remove o bloco do passo de mutações — usa regex para casar com
-    # qualquer versão do comentário (M01-M20, M01-M25, etc)
+    # qualquer nome de step que contenha 'mutation' ou 'mutação'
     import re
     mutated = re.sub(
-        r"      # Passo 4: executor de mutações[^\n]*\n"
-        r"      - name: Run catalog mutations\n"
+        r"      - name: Run [^\n]*mutation[^\n]*\n"
         r"        run: python tests/run_catalog_mutations\.py\n\n",
         "",
         text,
+        flags=re.IGNORECASE,
     )
     wf_path.write_text(mutated, encoding="utf-8")
     return repo
