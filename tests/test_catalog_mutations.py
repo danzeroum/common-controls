@@ -26,11 +26,11 @@ class TestMutationRunner:
             f"executor deve sair 0; saiu {result.returncode}\n"
             f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
         )
-        assert "20/20" in result.stdout
+        assert "25/25" in result.stdout
         assert "TODAS AS MUTAÇÕES PRODUZIRAM FALHA ESPERADA" in result.stdout
 
-    def test_runner_lists_all_twenty_mutations(self):
-        """O executor deve listar M01 a M20."""
+    def test_runner_lists_all_twentyfive_mutations(self):
+        """O executor deve listar M01 a M25."""
         result = subprocess.run(
             [sys.executable, str(RUNNER)],
             capture_output=True, text=True, timeout=60,
@@ -38,7 +38,8 @@ class TestMutationRunner:
         for mid in ("M01", "M02", "M03", "M04", "M05",
                     "M06", "M07", "M08", "M09", "M10",
                     "M11", "M12", "M13", "M14", "M15",
-                    "M16", "M17", "M18", "M19", "M20"):
+                    "M16", "M17", "M18", "M19", "M20",
+                    "M21", "M22", "M23", "M24", "M25"):
             assert f"[{mid}]" in result.stdout, f"{mid} não listada"
 
 
@@ -220,3 +221,101 @@ class TestIndividualMutations:
             f"--check deveria falhar (drift detectado); "
             f"saiu {result.returncode}\nstdout:\n{result.stdout}"
         )
+
+    # --- Sprint 4: M21-M25 (entrega e integridade) ---
+
+    def test_m21(self, tmp_path):
+        """M21: workflow ausente do pacote — verify_delivery_package falha."""
+        from run_catalog_mutations import m21_remove_workflow_from_zip
+        import importlib.util, zipfile, tempfile
+        repo = m21_remove_workflow_from_zip(tmp_path)
+        # Cria ZIP manualmente
+        zip_tmp = Path(tempfile.mkdtemp()) / "delivery-mut.zip"
+        with zipfile.ZipFile(zip_tmp, "w", zipfile.ZIP_DEFLATED) as zf:
+            for p in sorted(repo.rglob("*")):
+                if p.is_file():
+                    rel = str(p.relative_to(repo))
+                    zf.write(p, f"common-controls-sprint-4/{rel}")
+        spec = importlib.util.spec_from_file_location(
+            "vdp", REPO / "ci" / "verify_delivery_package.py")
+        vdp = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(vdp)
+        exit_code, findings = vdp.verify_package(
+            zip_tmp, repo=REPO, run_battery_check=False, quiet=True)
+        assert exit_code != 0
+
+    def test_m22(self, tmp_path):
+        """M22: workflow com contents: write — verify_delivery_package falha."""
+        from run_catalog_mutations import m22_workflow_contents_write_in_zip
+        import importlib.util, zipfile, tempfile
+        repo = m22_workflow_contents_write_in_zip(tmp_path)
+        zip_tmp = Path(tempfile.mkdtemp()) / "delivery-mut.zip"
+        with zipfile.ZipFile(zip_tmp, "w", zipfile.ZIP_DEFLATED) as zf:
+            for p in sorted(repo.rglob("*")):
+                if p.is_file():
+                    rel = str(p.relative_to(repo))
+                    zf.write(p, f"common-controls-sprint-4/{rel}")
+        spec = importlib.util.spec_from_file_location(
+            "vdp", REPO / "ci" / "verify_delivery_package.py")
+        vdp = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(vdp)
+        exit_code, findings = vdp.verify_package(
+            zip_tmp, repo=REPO, run_battery_check=False, quiet=True)
+        assert exit_code != 0
+
+    def test_m23(self, tmp_path):
+        """M23: validador removido do pacote — verify_delivery_package falha."""
+        from run_catalog_mutations import m23_remove_validator_from_zip
+        import importlib.util, zipfile, tempfile
+        repo = m23_remove_validator_from_zip(tmp_path)
+        zip_tmp = Path(tempfile.mkdtemp()) / "delivery-mut.zip"
+        with zipfile.ZipFile(zip_tmp, "w", zipfile.ZIP_DEFLATED) as zf:
+            for p in sorted(repo.rglob("*")):
+                if p.is_file():
+                    rel = str(p.relative_to(repo))
+                    zf.write(p, f"common-controls-sprint-4/{rel}")
+        spec = importlib.util.spec_from_file_location(
+            "vdp", REPO / "ci" / "verify_delivery_package.py")
+        vdp = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(vdp)
+        exit_code, findings = vdp.verify_package(
+            zip_tmp, repo=REPO, run_battery_check=False, quiet=True)
+        assert exit_code != 0
+
+    def test_m24(self, tmp_path):
+        """M24: arquivo alterado sem atualizar manifesto — hash mismatch."""
+        from run_catalog_mutations import m24_manifest_not_updated
+        import importlib.util, zipfile, tempfile
+        repo = m24_manifest_not_updated(tmp_path)
+        zip_tmp = Path(tempfile.mkdtemp()) / "delivery-mut.zip"
+        with zipfile.ZipFile(zip_tmp, "w", zipfile.ZIP_DEFLATED) as zf:
+            for p in sorted(repo.rglob("*")):
+                if p.is_file():
+                    rel = str(p.relative_to(repo))
+                    zf.write(p, f"common-controls-sprint-4/{rel}")
+        spec = importlib.util.spec_from_file_location(
+            "vdp", REPO / "ci" / "verify_delivery_package.py")
+        vdp = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(vdp)
+        exit_code, findings = vdp.verify_package(
+            zip_tmp, repo=REPO, run_battery_check=False, quiet=True)
+        assert exit_code != 0
+
+    def test_m25(self, tmp_path):
+        """M25: arquivo proibido no pacote — verify_delivery_package falha."""
+        from run_catalog_mutations import m25_forbidden_file_in_zip
+        import importlib.util, zipfile, tempfile
+        repo = m25_forbidden_file_in_zip(tmp_path)
+        zip_tmp = Path(tempfile.mkdtemp()) / "delivery-mut.zip"
+        with zipfile.ZipFile(zip_tmp, "w", zipfile.ZIP_DEFLATED) as zf:
+            for p in sorted(repo.rglob("*")):
+                if p.is_file():
+                    rel = str(p.relative_to(repo))
+                    zf.write(p, f"common-controls-sprint-4/{rel}")
+        spec = importlib.util.spec_from_file_location(
+            "vdp", REPO / "ci" / "verify_delivery_package.py")
+        vdp = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(vdp)
+        exit_code, findings = vdp.verify_package(
+            zip_tmp, repo=REPO, run_battery_check=False, quiet=True)
+        assert exit_code != 0

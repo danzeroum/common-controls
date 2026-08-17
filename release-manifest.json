@@ -1,0 +1,345 @@
+{
+  "manifest_version": "1.0",
+  "repository": "danzeroum/common-controls",
+  "version": "0.1.0",
+  "generated_from_commit": "a30a68e977ba79f2c2149b6bf924240226328082",
+  "generator": "ci/verify_release_manifest.py",
+  "generator_version": "0.1.0",
+  "files": [
+    {
+      "path": ".github/workflows/validate.yml",
+      "sha256": "bedd7578e773de8893f6772ab3d84e4fa912db9e0d73f4d295497bc68eaf1410"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "9214002834df44ad97a09bd3e9e25ccfef5f09b7acd6298fb9a07e6b3f0f4002"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "aea63b4af3aa2d58804b64ce93912642814e7e764f0192f530cbb0da9aa9dcde"
+    },
+    {
+      "path": "README.md",
+      "sha256": "b1264fac77ddda5681de93ae76831ad0668f8801a3d0f0bd75f524bd65273c88"
+    },
+    {
+      "path": "VERSION",
+      "sha256": "e9dd8507f4bf0c6f42458e41aea833ad0bd3f6127272335eee9bf4d58541ed67"
+    },
+    {
+      "path": "catalog.yaml",
+      "sha256": "35e4f4ab183abf1f2648b0f258dcc741563bfabb004775e7c8467cb046393357"
+    },
+    {
+      "path": "ci/generate_control_coverage.py",
+      "sha256": "26c607783632a8e0d2bf19762584d71d1d26e59e1a9acf500d5d4ec0b8b4de84"
+    },
+    {
+      "path": "ci/normalize_evidence_input.py",
+      "sha256": "06e7efcf5e9f2c4e2278d7933e53e249f35eba194f325e55d766721a8b833b0d"
+    },
+    {
+      "path": "ci/validate_catalog.py",
+      "sha256": "b0ce8ed9503a639e7bd7da61f6cc4ff7e1c3a4aab46fc711584bcf6c2e4aac39"
+    },
+    {
+      "path": "ci/validate_suite_compatibility.py",
+      "sha256": "8d10cd1dd18f6406b0b1b74461504cb6117d8d3fd42b6019b94f4a8fa614f350"
+    },
+    {
+      "path": "ci/verify_delivery_package.py",
+      "sha256": "1958722e9482d760a180def3b90d7cdbc2e3cef0e3865b0a2004756434b9046c"
+    },
+    {
+      "path": "ci/verify_release_manifest.py",
+      "sha256": "d8f5fe992044d53aa684311bed3af12e4f190d9491fa963768041bf29cc6390e"
+    },
+    {
+      "path": "controls/dependency-governance.yaml",
+      "sha256": "58b6485e5458f137a72c6f49a0d39832940209a42d5762417fbff3565f8598a8"
+    },
+    {
+      "path": "docs/AGENT_EXECUTION_PROMPT.md",
+      "sha256": "243c9f4efea79367494c68fb19503836826eb9a900d8cb1d54aaf2fee03acb0a"
+    },
+    {
+      "path": "docs/AGENT_IMPLEMENTATION_PLAN.md",
+      "sha256": "fd50339d5bbed70aaaaa3e82620d73fd90363f3cf2cb33a4aefd481cfbdb3aa6"
+    },
+    {
+      "path": "docs/PROJECT_SUITE_CONTRACT_COMPATIBILITY.md",
+      "sha256": "9d76c1ea6ae71399cdfd513ed9dce48a3c5ca73011a0b4f9ad54efd6030fe99b"
+    },
+    {
+      "path": "docs/SPRINT_1_IMPLEMENTATION.md",
+      "sha256": "d013788dd7959012919a2ba0bab0df63505487c102654903da199dcd5f3a0e8f"
+    },
+    {
+      "path": "docs/SPRINT_1_TEST_EVIDENCE.md",
+      "sha256": "b2aab83819b1d3eaac136d9c8b83fedda2f002fbed32d207b3bc8891bd64175d"
+    },
+    {
+      "path": "docs/SPRINT_2_IMPLEMENTATION.md",
+      "sha256": "a3d2a7845c3e66f08de352e12c080dfc4b537bf54367d169a85b10939c268396"
+    },
+    {
+      "path": "docs/SPRINT_2_TEST_EVIDENCE.md",
+      "sha256": "f66bd553c1af19043dae41877b8e9b2a7fec72fed16f9b807008b8791d56165d"
+    },
+    {
+      "path": "docs/SPRINT_3_IMPLEMENTATION.md",
+      "sha256": "03cb67459a49b000f2906fc9e11bb884d0bdac911571f16523a83922ea952305"
+    },
+    {
+      "path": "docs/SPRINT_3_TEST_EVIDENCE.md",
+      "sha256": "eca0b47ab41490969fbf4446db93cf708661c6845bfc09bdcea0df8b71e4e7fb"
+    },
+    {
+      "path": "docs/SPRINT_4_IMPLEMENTATION.md",
+      "sha256": "5d5a653f5770ffea6a35ef556c0706553648374099c6ab65d9b81566b9a9dc1d"
+    },
+    {
+      "path": "docs/SPRINT_4_POST_MERGE_CHECKLIST.md",
+      "sha256": "409cca908027ad09503effbe9099cc73db6885ddb56b863add3c8128289120b8"
+    },
+    {
+      "path": "docs/SPRINT_4_TEST_EVIDENCE.md",
+      "sha256": "8e5e780e2e1d6c37958b1fd7565f39446415f5c292e902ccf76cae3466daeaa3"
+    },
+    {
+      "path": "docs/generated/control-coverage.md",
+      "sha256": "70a6f0ba667b23b851674eb019fb1d4e0899eca88ad63d1749a84a064ebbf65b"
+    },
+    {
+      "path": "mappings/pse-suite.yaml",
+      "sha256": "25bc6d886a9c071c1ebee5b3caf6ea542f0b95aab0706dcf3954703e7b4435db"
+    },
+    {
+      "path": "policies/evidence-evaluation.md",
+      "sha256": "8c2e7bfa27a1b477eb1cc5f286964e17783732d7777649b2dcfb724ec4e04017"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "e747440e7c67a8fa4c336d4087e976abbb98571950fc4f089af122c5ca2ba148"
+    },
+    {
+      "path": "release-manifest.json",
+      "sha256": "2e1983940a344baba978b5b496bac735dd91f9dbedd6a4cfc8c12885cfc253e6"
+    },
+    {
+      "path": "requirements-dev.txt",
+      "sha256": "11ab7e6b99354d6f481a4f5f9d9df05c8d6b14c7c584c0597fb0265510ea0274"
+    },
+    {
+      "path": "requirements.txt",
+      "sha256": "007710053de7c311759c1462b98f6551a1f4a904b05f1a9fb50c0dd554fa6144"
+    },
+    {
+      "path": "schemas/control-assessment.schema.json",
+      "sha256": "21e2d42e70c9269d5cc34f20e59090408ca36b29d7dd6cde039f9b7ceb51845e"
+    },
+    {
+      "path": "schemas/control-catalog.schema.json",
+      "sha256": "7fd592e6d56e97ef4e07157f7a8a7d363d4bb34fdfc03fda28653d0a5063fc93"
+    },
+    {
+      "path": "schemas/control.schema.json",
+      "sha256": "73237e92b365b634974e80c175afc833a8d7e4ae7eeac500fc6e61b4a2aa658c"
+    },
+    {
+      "path": "schemas/evidence-input.schema.json",
+      "sha256": "104fafde279461a1e8da6931828fc5d443b9f297d1769963b28cc7a433b9e4e5"
+    },
+    {
+      "path": "schemas/suite-capabilities.schema.json",
+      "sha256": "6b23a68158b17310d360009abd5eeb02096fc349e0f336789796d877261ae3c7"
+    },
+    {
+      "path": "schemas/suite-mapping.schema.json",
+      "sha256": "48941392826b0d3bbc7297033880f2a31d84f8f8e550a6942e4275077cb4a328"
+    },
+    {
+      "path": "suites/pse-suite/v0.3.0.yaml",
+      "sha256": "effdfbe84ed90e11526365b0d71b65980f9505bb4d541d817e418275585dedff"
+    },
+    {
+      "path": "tests/conftest.py",
+      "sha256": "ecea9fbcc2a6fda48957f8b34c13b97ba875a3c02183045c606f4d4abf7eb655"
+    },
+    {
+      "path": "tests/fixtures/evidence-input/invalid/blocked-missing-provenance.yaml",
+      "sha256": "7ed24f1ba534156f30231ff74ca5ea38367b8e15168d2ce5c687f5f5df316e3c"
+    },
+    {
+      "path": "tests/fixtures/evidence-input/invalid/local-with-passed.yaml",
+      "sha256": "97bbc74e61b4baf93f2254eb22efbf7f8720163c58274444bd47b98aaee09c26"
+    },
+    {
+      "path": "tests/fixtures/evidence-input/valid/passed-bundle.yaml",
+      "sha256": "80fd71504bd1aec9d5906d80b1de947c69c3c3c741c9f3061a36ce76b2ee1fb6"
+    },
+    {
+      "path": "tests/fixtures/evidence-input/valid/planned-bundle.yaml",
+      "sha256": "ccabc5e96fc483bf91bce706a72ec1634aa7ba219fe0bb09d3619b5cef0c0b6e"
+    },
+    {
+      "path": "tests/fixtures/invalid/assessment-provenance-tampered.yaml",
+      "sha256": "6358d2c92ef512060f2f1150f06eebc62cbb89aa439160ef9463c8e9135d9ff8"
+    },
+    {
+      "path": "tests/fixtures/invalid/assessment-satisfied-without-full-provenance.yaml",
+      "sha256": "8c8fe78d31a3cd2e4242a61d4f365f5b51c2446d1cd720c198e9aacaea69e799"
+    },
+    {
+      "path": "tests/fixtures/invalid/assessment-satisfied-without-passed.yaml",
+      "sha256": "5e1a8083cde549012e37664b053051706cba4d2186fd021100dfcc53572a0aa1"
+    },
+    {
+      "path": "tests/fixtures/invalid/catalog-path-not-found.yaml",
+      "sha256": "8367e083d0c9bca8a4c19515c1d95e286c6058bc5c99a43a83e6fc34e4654aed"
+    },
+    {
+      "path": "tests/fixtures/invalid/control-active-depends-on-planned.yaml",
+      "sha256": "7223168ea3e82253d85232a28cc693ca470267b0c31d81860132d4942f65eb87"
+    },
+    {
+      "path": "tests/fixtures/invalid/control-id-malformed.yaml",
+      "sha256": "7a05c41bf1acfb80cc4509c3317872a96f2dc974a7f72776aa262bf857c391fb"
+    },
+    {
+      "path": "tests/fixtures/invalid/control-unexpected-property.yaml",
+      "sha256": "a7b97bafe9b0295aa9ed7abd4c61e93bc2fb35016bfe28c7d914ac34f0619784"
+    },
+    {
+      "path": "tests/fixtures/invalid/control-without-required-evidence.yaml",
+      "sha256": "516048a3a005f2f5142e0546b229422e97d69d2e8ab6004853ffb18cd055922d"
+    },
+    {
+      "path": "tests/fixtures/invalid/mapping-assertion-not-in-manifest.yaml",
+      "sha256": "72ad0a4bbba8b8a5863be243cabc2ee6db2eff0372dacce760127fe2671a3e6d"
+    },
+    {
+      "path": "tests/fixtures/invalid/mapping-assertion-without-capability.yaml",
+      "sha256": "c7e9b19b3b7deca693d4963247b88ebd0a203f0a964332955f2f088f98463102"
+    },
+    {
+      "path": "tests/fixtures/invalid/mapping-duplicate-assertion.yaml",
+      "sha256": "205e6c3181f7fa4ec218b690cb7e390cc7677a21fc7ef8892561a4a6dd2f7409"
+    },
+    {
+      "path": "tests/fixtures/invalid/mapping-insecure-accepted-status.yaml",
+      "sha256": "329994a1ff8e57f932d18ecdec63981d47c44d068d612e1c156f51a653a4339c"
+    },
+    {
+      "path": "tests/fixtures/invalid/mapping-planned-with-blocking-true.yaml",
+      "sha256": "86b222d274660bd4d68ecb4d6e2f36e783402363b107c5d7954cf852cdc5d5fa"
+    },
+    {
+      "path": "tests/fixtures/invalid/suite-manifest-capability-id-normalized.yaml",
+      "sha256": "f8c0bae71f093b8df0b063235dc4e740c866a8f017fb033361938f795a441cba"
+    },
+    {
+      "path": "tests/fixtures/invalid/suite-manifest-release-not-verified.yaml",
+      "sha256": "4214aab07f24c766165a48496c239aada9f2990c63f17eec678bc8d7c97e5fde"
+    },
+    {
+      "path": "tests/fixtures/mutations/README.md",
+      "sha256": "799cf21ff0e11f2db31590f1a60836350be09c4c69be9f79a23ae36ff40f5b8d"
+    },
+    {
+      "path": "tests/fixtures/valid/assessment-blocked.yaml",
+      "sha256": "3fb898fb8924387be1af8d341295abbd02a4d97972ddafa9e315cf3c233d8545"
+    },
+    {
+      "path": "tests/fixtures/valid/assessment-satisfied.yaml",
+      "sha256": "eb87775e686c18cf6a7e0ca3ee0e86f6d20dd8e5eeef8ff5096328505d4c7c09"
+    },
+    {
+      "path": "tests/fixtures/valid/catalog.yaml",
+      "sha256": "db85a9c27120283fba8393857d32d22adc23840250b063298d64c7cdbab53ab1"
+    },
+    {
+      "path": "tests/fixtures/valid/dependency-governance.yaml",
+      "sha256": "c10fb5a8d3e4048e208f23342356627ca4b1a88815fc4d62b801f7b77b84e101"
+    },
+    {
+      "path": "tests/fixtures/valid/pse-suite-mapping.yaml",
+      "sha256": "e36e9799e6bf18db39049e2f8a57499360d2c7bc087cec2e7791b946b0a0a0e6"
+    },
+    {
+      "path": "tests/run_catalog_mutations.py",
+      "sha256": "7ee8a6a5486e56024592b1be65c3ac597396a6369bad404891cf7c0e4d3d8744"
+    },
+    {
+      "path": "tests/test_catalog_mutations.py",
+      "sha256": "e116d6850278836313a2192e8f30f781dbc03fb6ac16ad7786bc1950a10f6215"
+    },
+    {
+      "path": "tests/test_delivery_package.py",
+      "sha256": "aa3386d050008f011b3e108d663ec14017392ac54c336271a6465e06534c1789"
+    },
+    {
+      "path": "tests/test_normalize_evidence_input.py",
+      "sha256": "a4c18118f4e394c4cfdd6fabdc9278b0835d6451f411c0e09addcf87db2c3351"
+    },
+    {
+      "path": "tests/test_suite_compatibility.py",
+      "sha256": "f9ada25c714bd2a827568a64d69e68caf36640aa65d7f23be0ee396d04fb5654"
+    },
+    {
+      "path": "tests/test_validate_catalog.py",
+      "sha256": "5914dca5c263123c38fc25f0be15438e80612eaa726e1d6533e21370d19b609b"
+    },
+    {
+      "path": "tests/test_workflow_static.py",
+      "sha256": "5bcdd5fac77177102c52e424dc799e7a6136a9def4321205e629e6c3ec14d9e1"
+    }
+  ],
+  "required_paths": [
+    ".github/workflows/validate.yml",
+    "ci/validate_catalog.py",
+    "ci/validate_suite_compatibility.py",
+    "ci/normalize_evidence_input.py",
+    "ci/generate_control_coverage.py",
+    "ci/verify_release_manifest.py",
+    "ci/verify_delivery_package.py",
+    "schemas/control.schema.json",
+    "schemas/control-catalog.schema.json",
+    "schemas/suite-mapping.schema.json",
+    "schemas/control-assessment.schema.json",
+    "schemas/suite-capabilities.schema.json",
+    "schemas/evidence-input.schema.json",
+    "controls/dependency-governance.yaml",
+    "mappings/pse-suite.yaml",
+    "suites/pse-suite/v0.3.0.yaml",
+    "tests/conftest.py",
+    "tests/test_validate_catalog.py",
+    "tests/test_catalog_mutations.py",
+    "tests/test_suite_compatibility.py",
+    "tests/test_workflow_static.py",
+    "tests/test_normalize_evidence_input.py",
+    "tests/test_delivery_package.py",
+    "tests/run_catalog_mutations.py",
+    "docs/generated/control-coverage.md",
+    "docs/PROJECT_SUITE_CONTRACT_COMPATIBILITY.md",
+    "docs/SPRINT_1_IMPLEMENTATION.md",
+    "docs/SPRINT_1_TEST_EVIDENCE.md",
+    "docs/SPRINT_2_IMPLEMENTATION.md",
+    "docs/SPRINT_2_TEST_EVIDENCE.md",
+    "docs/SPRINT_3_IMPLEMENTATION.md",
+    "docs/SPRINT_3_TEST_EVIDENCE.md",
+    "docs/SPRINT_4_IMPLEMENTATION.md",
+    "docs/SPRINT_4_TEST_EVIDENCE.md",
+    "docs/SPRINT_4_POST_MERGE_CHECKLIST.md",
+    "requirements.txt",
+    "requirements-dev.txt",
+    "pyproject.toml",
+    "release-manifest.json",
+    "VERSION",
+    "README.md",
+    "LICENSE",
+    ".gitignore",
+    "catalog.yaml",
+    "policies/evidence-evaluation.md"
+  ]
+}
