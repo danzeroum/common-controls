@@ -1,0 +1,47 @@
+name: Validate common-controls
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Catalog, compatibility and delivery validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Run test suite
+        run: python -m pytest -q
+
+      - name: Validate catalog
+        run: python ci/validate_catalog.py
+
+      - name: Validate suite compatibility
+        run: python ci/validate_suite_compatibility.py
+
+      - name: Run assurance mutations
+        run: python tests/run_catalog_mutations.py
+
+      - name: Check derived coverage report
+        run: python ci/generate_control_coverage.py --check
+
+      - name: Verify release manifest
+        run: python ci/verify_release_manifest.py
