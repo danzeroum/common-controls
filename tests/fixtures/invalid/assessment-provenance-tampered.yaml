@@ -1,0 +1,17 @@
+# Fixture INVÁLIDA — assessment com provenance adulterada.
+# catalog_commit não segue ^[0-9a-f]{40}$ (apenas 7 hex chars).
+# subject_fingerprint não segue ^sha256:[0-9a-f]{64}$.
+control_assessment:
+  control_id: CTRL-DEP-001
+  status: not_satisfied
+  assessed_at: "2026-08-17T12:00:00Z"
+  subject_fingerprint: "sha256:BAD"
+  evidence: []
+  reasons:
+    - code: missing_required_evidence
+      message: "Evidência obrigatória ausente."
+  provenance:
+    validator: ci/validate_catalog.py
+    validator_version: 0.1.0
+    catalog_commit: "abc1234"
+    catalog_version: 0.1.0

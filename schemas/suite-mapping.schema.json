@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://danzeroum.github.io/common-controls/schemas/suite-mapping.schema.json",
+  "title": "Suite mapping (assertions → capabilities)",
+  "description": "Mapeia IDs de assertions emitidas por uma suíte para capabilities técnicas. A suíte não conhece CTRL-* nem ISO — ela emite fatos com IDs próprios; o mapping apenas documenta quais capabilities cada assertion cobre e quais status são aceitos como evidência positiva.",
+  "type": "object",
+  "required": ["suite_mapping"],
+  "additionalProperties": false,
+  "properties": {
+    "suite_mapping": {
+      "type": "object",
+      "required": ["suite_id", "contract_version", "source_schema", "assertions", "result_policy"],
+      "additionalProperties": false,
+      "properties": {
+        "suite_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "ID da suíte. Ex.: pse-suite, qa-suite."
+        },
+        "contract_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$",
+          "description": "Versão do contrato comum (X.Y)."
+        },
+        "source_schema": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Schema do laudo de origem (ex.: laudo-pse-1.0)."
+        },
+        "assertions": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Lista de assertions mapeadas. Não pode ser vazia: mapping sem assertions é redundante com a ausência de mapping.",
+          "items": {
+            "type": "object",
+            "required": ["id", "capability", "description"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(-[A-Z0-9]+)+$",
+                "description": "ID estável da assertion. Prefixo maiúsculo identifica a suíte (PSE-, QA-). Múltiplos segmentos separados por hífen. Ex.: PSE-DEP-INVENTORY-MATCH."
+              },
+              "capability": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*(\\.[a-z0-9-]+)+$",
+                "description": "Capability técnica qualificada por domínio. Ex.: security.dependency-inventory, privacy.consent-management."
+              },
+              "description": {
+                "type": "string",
+                "minLength": 10,
+                "description": "Descrição legível do que a assertion verifica. Mínimo 10 caracteres para evitar placeholder."
+              }
+            }
+          }
+        },
+        "result_policy": {
+          "type": "object",
+          "required": ["accepted_assertion_statuses", "rejected_assertion_statuses"],
+          "additionalProperties": false,
+          "description": "Política de aceitação. Estados inseguros (failed/skipped/errored/not_assessed) DEVEM estar em rejected. Aceitar 'skipped' ou 'not_assessed' aqui é configuração decorativa que aprova sem medir.",
+          "properties": {
+            "accepted_assertion_statuses": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": ["passed"]
+              },
+              "description": "Único estado aceito como evidência positiva automatizada é 'passed'."
+            },
+            "rejected_assertion_statuses": {
+              "type": "array",
+              "minItems": 4,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": ["failed", "skipped", "errored", "not_assessed"]
+              },
+              "description": "Estados inseguros. Mínimo 4 — todos os quatro devem estar rejeitados explicitamente para fechar a política."
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://danzeroum.github.io/common-controls/schemas/control.schema.json",
   "title": "Common assurance control",
+  "description": "Um controle técnico reutilizável. Define qual evidência é obrigatória para satisfazê-lo e como tratar estados inseguros de evidência. Não conhece ISO, exceções, aceites ou perfis — esses pertencem ao projeto consumidor e aos profiles ISO.",
   "type": "object",
   "required": ["control"],
   "additionalProperties": false,
@@ -11,12 +12,142 @@
       "required": ["id", "title", "purpose", "required_evidence", "evaluation", "exceptions"],
       "additionalProperties": false,
       "properties": {
-        "id": {"type": "string", "pattern": "^CTRL-[A-Z]+-[0-9]{3}$"},
-        "title": {"type": "string", "minLength": 1},
-        "purpose": {"type": "string", "minLength": 1},
-        "required_evidence": {"type": "object", "required": ["all_of"], "properties": {"all_of": {"type": "array", "minItems": 1}}},
-        "evaluation": {"type": "object", "required": ["missing_evidence", "errored_evidence", "expired_evidence"]},
-        "exceptions": {"type": "object", "required": ["allowed"]}
+        "id": {
+          "type": "string",
+          "pattern": "^CTRL-[A-Z]+-[0-9]{3}$",
+          "description": "ID estável. Letras maiúsculas entre CTRL- e -NNN. Ex.: CTRL-DEP-001."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Título curto legível por humano."
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Por que este controle existe. Frase declarativa, não lista de requisitos."
+        },
+        "required_evidence": {
+          "type": "object",
+          "required": ["all_of"],
+          "additionalProperties": false,
+          "properties": {
+            "all_of": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Lista conjuntiva de requisitos de evidência. Todos precisam ser satisfeitos simultaneamente para o controle ser 'satisfied'. Vazio não é permitido: controle sem evidência obrigatória é configuração decorativa.",
+              "items": {
+                "type": "object",
+                "required": ["source", "expected_status"],
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Identificador da fonte de evidência: 'pse-suite', 'qa-suite', 'project', ou outro ID canônico."
+                  },
+                  "assertion": {
+                    "type": "string",
+                    "pattern": "^[A-Z][A-Z0-9]*(-[A-Z0-9]+)+$",
+                    "description": "ID da assertion emitida pela suíte (ex.: PSE-DEP-INVENTORY-MATCH). Obrigatório quando source é uma suíte. Para fontes internas do projeto consumidor (artifact), pode ser omitido em favor de 'artifact'."
+                  },
+                  "artifact": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Caminho de artefato declarativo no projeto consumidor (ex.: security/dependencies.yaml). Usado quando source='project'."
+                  },
+                  "validator": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Nome do validador canônico aplicado ao artifact (ex.: dependency_inventory_schema)."
+                  },
+                  "expected_status": {
+                    "type": "string",
+                    "enum": ["passed"],
+                    "description": "Único estado automatizado que satisfaz uma exigência obrigatória. Falha fechada: 'skipped', 'errored', 'not_assessed', 'failed' nunca satisfazem."
+                  },
+                  "freshness_days": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Idade máxima da evidência em dias. Evidência mais velha é tratada como 'expired_evidence'."
+                  }
+                },
+                "oneOf": [
+                  {"required": ["assertion"]},
+                  {"required": ["artifact"]}
+                ]
+              }
+            }
+          }
+        },
+        "evaluation": {
+          "type": "object",
+          "required": [
+            "missing_evidence",
+            "errored_evidence",
+            "expired_evidence",
+            "skipped_evidence",
+            "not_assessed_evidence"
+          ],
+          "additionalProperties": false,
+          "description": "Política de falha fechada. Todos os estados inseguros de evidência devem resultar em 'not_satisfied'. Não há 'maybe': aceitar 'partially_satisfied' aqui seria abrir exceção silenciosa.",
+          "properties": {
+            "missing_evidence": {
+              "type": "string",
+              "enum": ["not_satisfied", "blocked"],
+              "description": "Evidência obrigatória ausente. 'blocked' reservado para falha de integridade/proveniência."
+            },
+            "errored_evidence": {
+              "type": "string",
+              "enum": ["not_satisfied", "blocked"]
+            },
+            "expired_evidence": {
+              "type": "string",
+              "enum": ["not_satisfied", "blocked"]
+            },
+            "skipped_evidence": {
+              "type": "string",
+              "enum": ["not_satisfied", "blocked"]
+            },
+            "not_assessed_evidence": {
+              "type": "string",
+              "enum": ["not_satisfied", "blocked"]
+            }
+          }
+        },
+        "exceptions": {
+          "type": "object",
+          "required": ["allowed"],
+          "additionalProperties": false,
+          "description": "Exceções pertencem ao projeto consumidor, não ao catálogo. Aqui apenas se declara SE são permitidas e quais campos obrigatórios uma exceção válida exige.",
+          "properties": {
+            "allowed": {
+              "type": "boolean"
+            },
+            "requires": {
+              "type": "array",
+              "description": "Campos obrigatórios numa exceção declarada pelo projeto consumidor. Ignorado se allowed=false.",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "risk_id",
+                  "owner",
+                  "approved_by",
+                  "expiry_date",
+                  "compensating_controls",
+                  "justification"
+                ]
+              },
+              "uniqueItems": true
+            }
+          },
+          "allOf": [
+            {
+              "if": {"properties": {"allowed": {"const": true}}},
+              "then": {"required": ["requires"]}
+            }
+          ]
+        }
       }
     }
   }

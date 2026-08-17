@@ -1,0 +1,18 @@
+# Fixture INVÁLIDA — mapping PSE com assertion sem capability.
+# O validador deve detectar ASSERTION-WITHOUT-CAPABILITY.
+suite_mapping:
+  suite_id: pse-suite
+  contract_version: "1.0"
+  source_schema: laudo-pse-1.0
+  assertions:
+    - id: PSE-DEP-INVENTORY-MATCH
+      description: >-
+        Assertion sem o campo capability obrigatório.
+  result_policy:
+    accepted_assertion_statuses:
+      - passed
+    rejected_assertion_statuses:
+      - failed
+      - skipped
+      - errored
+      - not_assessed
