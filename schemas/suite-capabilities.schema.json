@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://danzeroum.github.io/common-controls/schemas/suite-capabilities.schema.json",
+  "title": "Suite capabilities manifest",
+  "description": "Manifesto local de capability de suíte. Declara o que uma versão verificável de uma suíte (pse-suite, qa-suite) realmente emite, distinto do que ela pretende emitir no futuro. Permite que o validador diferencie assertions 'implemented' (elegíveis para satisfazer controle ativo) de 'planned' (não elegíveis, apenas documentadas).",
+  "type": "object",
+  "required": ["suite"],
+  "additionalProperties": false,
+  "properties": {
+    "suite": {
+      "type": "object",
+      "required": [
+        "id",
+        "version",
+        "commit",
+        "source_schema",
+        "release_verified",
+        "capabilities",
+        "future_assertions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "ID da suíte. Ex.: pse-suite, qa-suite. Deve bater com o suite_id declarado no mapping."
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "description": "Versão semântica da release publicada. Ex.: 0.3.0."
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "SHA do commit da release. Imutável — tag pode ser movida, commit não."
+        },
+        "source_schema": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Schema do laudo de origem (ex.: laudo-pse-1.0)."
+        },
+        "catalog_hash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "Hash SHA-256 do catálogo de checks da suíte. Opcional mas recomendado — torna dois manifestos com mesma versão comparáveis por conteúdo."
+        },
+        "release_verified": {
+          "type": "boolean",
+          "description": "true = a versão foi verificada como release publicada (tag + commit + manifesto coerentes). false = manifesto declarado sem verificação de release; suíte não elegível para controle bloqueante."
+        },
+        "verified_at": {
+          "type": "string",
+          "format": "date",
+          "description": "Data em que a release foi verificada pela última vez. Obrigatório quando release_verified=true."
+        },
+        "capabilities": {
+          "type": "array",
+          "description": "Lista de capabilities implementadas nesta versão. Cada capability é um check emitido pela suíte com ID próprio (P-01, S-04, E-08, etc.).",
+          "items": {
+            "type": "object",
+            "required": ["id", "kind", "status"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Z]-[0-9]{2}$",
+                "description": "ID do check emitido pela suíte. Formato canônico P-NN, S-NN, E-NN (suítes PSE/QA). Não aceita PSE-DEP-* aqui — essas são assertions futuras normalizadas, vivem em future_assertions."
+              },
+              "kind": {
+                "type": "string",
+                "enum": ["check"],
+                "description": "Tipo de capability. Por ora apenas 'check'. Pode evoluir em versões futuras do schema."
+              },
+              "status": {
+                "type": "string",
+                "enum": ["implemented", "deprecated"],
+                "description": "implemented = ativo nesta versão; deprecated = ainda emite mas marcado para remoção."
+              },
+              "capability": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*(\\.[a-z0-9-]+)+$",
+                "description": "Capability técnica qualificada (ex.: security.dependency-inventory). Opcional — alguns checks cobrem múltiplas capabilities."
+              }
+            }
+          }
+        },
+        "future_assertions": {
+          "type": "array",
+          "description": "Assertions planejadas mas NÃO emitidas nesta versão. Não podem satisfazer controle ativo. Devem ter lifecycle=planned no mapping.",
+          "items": {
+            "type": "object",
+            "required": ["id", "status", "source", "blocking_eligible"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(-[A-Z0-9]+)+$",
+                "description": "ID da assertion planejada. Ex.: PSE-DEP-INVENTORY-MATCH. Formato normalizado para adapter futuro (não confundir com P-NN que é check já emitido)."
+              },
+              "status": {
+                "type": "string",
+                "enum": ["planned", "draft", "withdrawn"],
+                "description": "planned = intenção declarada, sem implementação; draft = em desenvolvimento; withdrawn = abandonada."
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1,
+                "description": "De onde virá a assertion quando implementada. Ex.: future-evidence-bundle-adapter, pse/adapters/evidence_bundle_v1.py."
+              },
+              "blocking_eligible": {
+                "type": "boolean",
+                "const": false,
+                "description": "SEMPRE false para future_assertions. Uma assertion planejada nunca pode satisfazer um controle bloqueante — seria aprovar sem medir."
+              },
+              "target_contract": {
+                "type": "string",
+                "description": "Contrato alvo quando implementada. Ex.: evidence-bundle/v1."
+              },
+              "planned_for_version": {
+                "type": "string",
+                "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+                "description": "Versão planejada para implementação. Opcional."
+              }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "description": "release_verified=true exige verified_at.",
+          "if": {"properties": {"release_verified": {"const": true}}},
+          "then": {"required": ["verified_at"]}
+        }
+      ]
+    }
+  }
+}

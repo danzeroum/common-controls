@@ -1,5 +1,6 @@
-# Fixture INVÁLIDA — mapping PSE com assertion sem capability.
-# O validador deve detectar ASSERTION-WITHOUT-CAPABILITY.
+# Fixture INVÁLIDA — mapping com assertion planned mas blocking_eligible=true.
+# O schema suite-mapping.schema.json deve rejeitar: blocking_eligible=true
+# exige lifecycle=implemented.
 suite_mapping:
   suite_id: pse-suite
   contract_version: "1.0"
@@ -7,10 +8,11 @@ suite_mapping:
   suite_version: "0.3.0"
   assertions:
     - id: PSE-DEP-INVENTORY-MATCH
+      capability: security.dependency-inventory
       description: >-
-        Assertion sem o campo capability obrigatório.
+        Assertion planejada marcada erroneamente como blocking_eligible=true.
       lifecycle: planned
-      blocking_eligible: false
+      blocking_eligible: true
       requires_adapter:
         source_schema: laudo-pse-1.0
         target_contract: evidence-bundle/v1

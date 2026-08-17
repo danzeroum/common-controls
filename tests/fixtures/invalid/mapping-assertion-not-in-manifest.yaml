@@ -1,14 +1,16 @@
-# Fixture INVÁLIDA — mapping PSE com assertion sem capability.
-# O validador deve detectar ASSERTION-WITHOUT-CAPABILITY.
+# Fixture INVÁLIDA — mapping referencia assertion que não existe no manifesto.
+# O validador de compatibilidade deve detectar ASSERTION-NOT-IN-MANIFEST.
 suite_mapping:
   suite_id: pse-suite
   contract_version: "1.0"
   source_schema: laudo-pse-1.0
   suite_version: "0.3.0"
   assertions:
-    - id: PSE-DEP-INVENTORY-MATCH
+    - id: PSE-DEP-NONEXISTENT-ASSERTION
+      capability: security.nonexistent
       description: >-
-        Assertion sem o campo capability obrigatório.
+        Assertion que não existe nem em capabilities[] nem em future_assertions[]
+        do manifesto da suíte v0.3.0.
       lifecycle: planned
       blocking_eligible: false
       requires_adapter:

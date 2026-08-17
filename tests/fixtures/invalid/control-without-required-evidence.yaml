@@ -5,6 +5,7 @@ control:
   title: Controle sem evidência obrigatória
   purpose: >-
     Controle que não declara required_evidence é configuração decorativa.
+  lifecycle: active
   evaluation:
     missing_evidence: not_satisfied
     errored_evidence: not_satisfied

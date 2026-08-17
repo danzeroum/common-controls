@@ -4,15 +4,26 @@ suite_mapping:
   suite_id: pse-suite
   contract_version: "1.0"
   source_schema: laudo-pse-1.0
+  suite_version: "0.3.0"
   assertions:
     - id: PSE-DEP-INVENTORY-MATCH
       capability: security.dependency-inventory
       description: >-
         Inventário local consistente com manifestos.
+      lifecycle: planned
+      blocking_eligible: false
+      requires_adapter:
+        source_schema: laudo-pse-1.0
+        target_contract: evidence-bundle/v1
     - id: PSE-DEP-INVENTORY-MATCH
       capability: security.dependency-inventory
       description: >-
         Segunda declaração duplicada do mesmo ID.
+      lifecycle: planned
+      blocking_eligible: false
+      requires_adapter:
+        source_schema: laudo-pse-1.0
+        target_contract: evidence-bundle/v1
   result_policy:
     accepted_assertion_statuses:
       - passed

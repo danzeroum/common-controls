@@ -1,0 +1,17 @@
+# Fixture INVÁLIDA — manifesto de suíte com release_verified=false.
+# Quando um mapping referencia esta suíte, o validador deve detectar
+# SUITE-NOT-RELEASE-VERIFIED e tornar a suíte não elegível para controle bloqueante.
+suite:
+  id: pse-suite
+  version: 0.4.0-draft
+  commit: "abcdefabcdefabcdefabcdefabcdefabcdefabcd"
+  source_schema: laudo-pse-1.0
+  release_verified: false
+  # verified_at omitido porque release_verified=false
+  capabilities: []
+  future_assertions:
+    - id: PSE-DEP-INVENTORY-MATCH
+      status: planned
+      source: future-evidence-bundle-adapter
+      blocking_eligible: false
+      target_contract: evidence-bundle/v1

@@ -1,13 +1,34 @@
+# Mapping da suíte pse-suite para o catálogo common-controls.
+#
+# Cada assertion declara seu lifecycle:
+#   - implemented: emitida por release verificável da suíte (elegível para controle ativo)
+#   - planned: intenção declarada no manifesto da suíte mas não emitida (NÃO elegível)
+#
+# As duas assertions PSE-DEP-* são PLANEADAS na release v0.3.0 verificável.
+# Quando o adapter PSE para evidence-bundle/v1 existir (M3 do plano), elas
+# podem migrar para lifecycle: implemented e blocking_eligible: true.
+#
+# Até lá, CTRL-DEP-001 não pode ser avaliado como 'satisfied' com base em PSE.
+#
+# Schema: schemas/suite-mapping.schema.json
+
 suite_mapping:
   suite_id: pse-suite
   contract_version: "1.0"
   source_schema: laudo-pse-1.0
+  suite_version: "0.3.0"
+
   assertions:
     - id: PSE-DEP-INVENTORY-MATCH
       capability: security.dependency-inventory
       description: >-
         O inventário local de dependências é consistente com os manifestos
         de dependência incluídos no escopo avaliado.
+      lifecycle: planned
+      blocking_eligible: false
+      requires_adapter:
+        source_schema: laudo-pse-1.0
+        target_contract: evidence-bundle/v1
 
     - id: PSE-DEP-VULNERABILITY-SCAN
       capability: security.dependency-vulnerability-scan
@@ -15,6 +36,11 @@ suite_mapping:
         A varredura de vulnerabilidades de dependências foi executada no
         escopo declarado e não encontrou vulnerabilidade acima do limiar
         adotado pelo projeto consumidor.
+      lifecycle: planned
+      blocking_eligible: false
+      requires_adapter:
+        source_schema: laudo-pse-1.0
+        target_contract: evidence-bundle/v1
 
   result_policy:
     accepted_assertion_statuses:

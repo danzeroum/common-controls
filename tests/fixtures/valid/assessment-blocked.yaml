@@ -4,13 +4,23 @@ control_assessment:
   control_id: CTRL-DEP-001
   status: blocked
   assessed_at: "2026-08-17T12:00:00Z"
-  subject_fingerprint: "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+  subject_fingerprint: "sha256:6666666666666666666666666666666666666666666666666666666666666666"
   evidence: []
   reasons:
     - code: provenance_invalid
       message: "Evidência recebida sem fingerprint de bundle; proveniência não verificável."
   provenance:
+    source_kind: manual_review
+    source_id: project
+    source_version: 0.1.0
+    source_commit: "dddddddddddddddddddddddddddddddddddddddd"
+    source_schema: project-internal
+    artifact_hash: "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+    generated_at: "2026-08-17T11:55:00Z"
+    subject_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    subject_tree_hash: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    scope_fingerprint: "sha256:8888888888888888888888888888888888888888888888888888888888888888"
     validator: ci/validate_catalog.py
     validator_version: 0.1.0
-    catalog_commit: "0000000000000000000000000000000000000000"
+    catalog_commit: "cccccccccccccccccccccccccccccccccccccccc"
     catalog_version: 0.1.0

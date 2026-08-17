@@ -26,17 +26,18 @@ class TestMutationRunner:
             f"executor deve sair 0; saiu {result.returncode}\n"
             f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
         )
-        assert "10/10" in result.stdout
+        assert "15/15" in result.stdout
         assert "TODAS AS MUTAÇÕES PRODUZIRAM FALHA ESPERADA" in result.stdout
 
-    def test_runner_lists_all_ten_mutations(self):
-        """O executor deve listar M01 a M10."""
+    def test_runner_lists_all_fifteen_mutations(self):
+        """O executor deve listar M01 a M15."""
         result = subprocess.run(
             [sys.executable, str(RUNNER)],
             capture_output=True, text=True, timeout=60,
         )
         for mid in ("M01", "M02", "M03", "M04", "M05",
-                    "M06", "M07", "M08", "M09", "M10"):
+                    "M06", "M07", "M08", "M09", "M10",
+                    "M11", "M12", "M13", "M14", "M15"):
             assert f"[{mid}]" in result.stdout, f"{mid} não listada"
 
 
@@ -111,4 +112,41 @@ class TestIndividualMutations:
         import validate_catalog as vc
         repo = m10_unexpected_property(tmp_path)
         exit_code, findings = vc.validate_directory(repo)
+        assert exit_code != 0
+
+    # --- Sprint 2: M11-M15 (compatibilidade de suíte) ---
+
+    def test_m11(self, tmp_path):
+        from run_catalog_mutations import m11_promote_planned_to_implemented
+        import validate_suite_compatibility as vsc
+        repo = m11_promote_planned_to_implemented(tmp_path)
+        exit_code, findings = vsc.validate_directory(repo)
+        assert exit_code != 0
+
+    def test_m12(self, tmp_path):
+        from run_catalog_mutations import m12_remove_suite_manifest
+        import validate_suite_compatibility as vsc
+        repo = m12_remove_suite_manifest(tmp_path)
+        exit_code, findings = vsc.validate_directory(repo)
+        assert exit_code != 0
+
+    def test_m13(self, tmp_path):
+        from run_catalog_mutations import m13_control_active_depends_on_planned
+        import validate_suite_compatibility as vsc
+        repo = m13_control_active_depends_on_planned(tmp_path)
+        exit_code, findings = vsc.validate_directory(repo)
+        assert exit_code != 0
+
+    def test_m14(self, tmp_path):
+        from run_catalog_mutations import m14_manifest_release_not_verified
+        import validate_suite_compatibility as vsc
+        repo = m14_manifest_release_not_verified(tmp_path)
+        exit_code, findings = vsc.validate_directory(repo)
+        assert exit_code != 0
+
+    def test_m15(self, tmp_path):
+        from run_catalog_mutations import m15_assessment_satisfied_without_full_provenance
+        import validate_catalog as vc
+        repo = m15_assessment_satisfied_without_full_provenance(tmp_path)
+        exit_code, findings = vc.validate_directory(repo, include_assessments=True)
         assert exit_code != 0

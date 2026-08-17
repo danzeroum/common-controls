@@ -1,5 +1,5 @@
 # Fixture válida — assessment satisfied com evidência passed e provenance íntegra.
-# Prova que o modelo de assessment aceita o caminho feliz.
+# Prova que o modelo de assessment aceita o caminho feliz com provenance completa.
 control_assessment:
   control_id: CTRL-DEP-001
   status: satisfied
@@ -25,7 +25,17 @@ control_assessment:
     - code: all_evidence_passed
       message: "Todas as evidências obrigatórias foram avaliadas como passed."
   provenance:
+    source_kind: suite_bundle
+    source_id: pse-suite
+    source_version: 0.3.0
+    source_commit: "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038"
+    source_schema: laudo-pse-1.0
+    artifact_hash: "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+    generated_at: "2026-08-17T11:55:00Z"
+    subject_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    subject_tree_hash: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    scope_fingerprint: "sha256:5555555555555555555555555555555555555555555555555555555555555555"
     validator: ci/validate_catalog.py
     validator_version: 0.1.0
-    catalog_commit: "0000000000000000000000000000000000000000"
+    catalog_commit: "cccccccccccccccccccccccccccccccccccccccc"
     catalog_version: 0.1.0

@@ -9,7 +9,17 @@ control_assessment:
   evidence: []
   reasons: []
   provenance:
+    source_kind: suite_bundle
+    source_id: pse-suite
+    source_version: 0.3.0
+    source_commit: "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038"
+    source_schema: laudo-pse-1.0
+    artifact_hash: "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+    generated_at: "2026-08-17T11:55:00Z"
+    subject_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    subject_tree_hash: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    scope_fingerprint: "sha256:9999999999999999999999999999999999999999999999999999999999999999"
     validator: ci/validate_catalog.py
     validator_version: 0.1.0
-    catalog_commit: "0000000000000000000000000000000000000000"
+    catalog_commit: "cccccccccccccccccccccccccccccccccccccccc"
     catalog_version: 0.1.0

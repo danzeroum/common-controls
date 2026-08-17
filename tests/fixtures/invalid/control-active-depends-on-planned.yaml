@@ -1,10 +1,11 @@
-# Fixture INVÁLIDA — control ID malformado (não segue ^CTRL-[A-Z]+-[0-9]{3}$).
-# Deve falhar tanto no schema quanto na checagem estrutural do validador.
+# Fixture INVÁLIDA — controle ativo (lifecycle=active) depende de assertion planejada.
+# O validador de compatibilidade deve detectar ACTIVE-CONTROL-DEPENDS-ON-PLANNED.
 control:
-  id: ctrl-dep-1
-  title: ID malformado
+  id: CTRL-DEP-002
+  title: Controle ativo que depende de assertion planejada
   purpose: >-
-    IDs de controle devem seguir ^CTRL-[A-Z]+-[0-9]{3}$.
+    Controle declarado como active mas exige assertion que ainda não é emitida
+    pela suíte. Deve falhar: controle ativo não pode depender de planned.
   lifecycle: active
   required_evidence:
     all_of:
