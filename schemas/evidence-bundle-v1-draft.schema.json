@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://danzeroum.github.io/common-controls/schemas/evidence-bundle-v1-draft.schema.json",
+  "title": "Evidence bundle v1 (draft)",
+  "description": "Draft do contrato de evidence-bundle/v1. Evolução aditiva de evidence-input/v0.1. Adiciona runner_kind, network_used, authorization, e reason em assertions. Não é definitivo — precisa de validação com adapter PSE real.",
+  "type": "object",
+  "required": ["evidence_bundle"],
+  "additionalProperties": false,
+  "properties": {
+    "evidence_bundle": {
+      "type": "object",
+      "required": ["schema_version", "producer", "subject", "assertions", "integrity"],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "string",
+          "const": "evidence-bundle/v1-draft",
+          "description": "Versão do schema draft. Fixo em v1-draft até validação com adapter real."
+        },
+        "producer": {
+          "type": "object",
+          "required": ["suite_id", "suite_version", "suite_commit", "source_schema", "catalog_hash", "local_execution", "execution_mode", "runner_kind", "network_used"],
+          "additionalProperties": false,
+          "description": "Identidade completa da suíte que produziu o bundle.",
+          "properties": {
+            "suite_id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+            "suite_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+            "suite_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+            "source_schema": {"type": "string", "minLength": 1, "description": "Schema do laudo de origem (ex.: laudo-pse-1.0)"},
+            "catalog_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+            "local_execution": {"type": "boolean", "description": "true = modo local (sem artifact); false = CI estrito"},
+            "execution_mode": {
+              "type": "string",
+              "enum": ["inventory", "passive", "load", "active_discovery"],
+              "description": "Como a suíte rodou. Espelha harness.yaml:execution_modes."
+            },
+            "runner_kind": {
+              "type": "string",
+              "enum": ["agent", "human", "ci"],
+              "description": "Quem disparou a execução."
+            },
+            "network_used": {"type": "boolean", "description": "Se a execução usou rede."},
+            "authorization": {
+              "type": ["object", "null"],
+              "description": "Atestação humana (para Trabalho A). Null quando local_execution=true ou inventory.",
+              "properties": {
+                "attested_by": {"type": ["string", "null"]},
+                "scope": {"type": "array", "items": {"type": "string"}},
+                "expires": {"type": ["string", "null"]},
+                "target_fingerprint": {"type": ["string", "null"]},
+                "synthetic_identities": {"type": ["boolean", "null"]}
+              }
+            }
+          }
+        },
+        "subject": {
+          "type": "object",
+          "required": ["repository", "commit", "tree_hash", "target_lock_hash", "scope_fingerprint"],
+          "additionalProperties": false,
+          "properties": {
+            "repository": {"type": "string", "minLength": 1},
+            "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+            "tree_hash": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+            "target_lock_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+            "scope_fingerprint": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+          }
+        },
+        "assertions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "status", "evidence_fingerprint", "capability", "executed_at"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {"type": "string", "pattern": "^[A-Z][A-Z0-9]*(-[A-Z0-9]+)+$"},
+              "status": {
+                "type": "string",
+                "enum": ["passed", "failed", "skipped", "errored", "not_assessed", "not_applicable"]
+              },
+              "evidence_fingerprint": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+              "capability": {"type": "string", "pattern": "^[a-z][a-z0-9-]*(\\.[a-z0-9-]+)+$"},
+              "executed_at": {"type": "string", "format": "date-time"},
+              "reason": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Motivo quando status != passed. Obrigatório para skipped, errored, not_assessed."
+              },
+              "details": {
+                "type": "object",
+                "description": "Detalhes do finding quando status=failed. Sanitizado pelo adapter na origem.",
+                "properties": {
+                  "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+                  "summary": {"type": "string"},
+                  "dimension": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "integrity": {
+          "type": "object",
+          "required": ["canonical_hash"],
+          "additionalProperties": false,
+          "properties": {
+            "canonical_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+          }
+        }
+      },
+      "allOf": [
+        {
+          "description": "local_execution=true exige status in (not_assessed, not_applicable).",
+          "if": {"properties": {"producer": {"properties": {"local_execution": {"const": true}}}}},
+          "then": {
+            "properties": {
+              "assertions": {
+                "items": {
+                  "properties": {"status": {"enum": ["not_assessed", "not_applicable"]}}
+                }
+              }
+            }
+          }
+        },
+        {
+          "description": "skipped, errored, not_assessed exigem reason.",
+          "if": {
+            "properties": {
+              "assertions": {
+                "contains": {
+                  "properties": {"status": {"enum": ["skipped", "errored", "not_assessed"]}}
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "assertions": {
+                "items": {
+                  "if": {"properties": {"status": {"enum": ["skipped", "errored", "not_assessed"]}}},
+                  "then": {"required": ["reason"]}
+                }
+              }
+            }
+          }
+        },
+        {
+          "description": "failed exige details.severity.",
+          "if": {
+            "properties": {
+              "assertions": {
+                "contains": {"properties": {"status": {"const": "failed"}}}
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "assertions": {
+                "items": {
+                  "if": {"properties": {"status": {"const": "failed"}}},
+                  "then": {"required": ["details"]}
+                }
+              }
+            }
+          }
+        },
+        {
+          "description": "network_used=true ou execution_mode != inventory exige authorization não-null.",
+          "if": {
+            "properties": {
+              "producer": {
+                "properties": {
+                  "network_used": {"const": true}
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "producer": {"required": ["authorization"]}
+            }
+          }
+        }
+      ]
+    }
+  }
+}

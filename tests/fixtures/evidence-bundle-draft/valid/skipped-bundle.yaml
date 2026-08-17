@@ -1,0 +1,28 @@
+# Fixture válida — evidence-bundle com assertion skipped + reason (novo em v1).
+evidence_bundle:
+  schema_version: evidence-bundle/v1-draft
+  producer:
+    suite_id: pse-suite
+    suite_version: 0.3.0
+    suite_commit: "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038"
+    source_schema: laudo-pse-1.0
+    catalog_hash: "sha256:33d5be7e85777045d0088c3f5f7a91e394c83c4be33cfeda519b6073be0420e3"
+    local_execution: false
+    execution_mode: inventory
+    runner_kind: ci
+    network_used: false
+  subject:
+    repository: danzeroum/project
+    commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    tree_hash: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    target_lock_hash: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    scope_fingerprint: "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  assertions:
+    - id: P-07
+      status: skipped
+      evidence_fingerprint: "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+      capability: privacy.consent-granularity
+      executed_at: "2026-08-17T11:55:00Z"
+      reason: "N/A declarado: sem endpoint de consentimento no escopo"
+  integrity:
+    canonical_hash: "sha256:4444444444444444444444444444444444444444444444444444444444444444"

@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "repository": "danzeroum/common-controls",
   "version": "0.1.0",
-  "generated_from_commit": "3804d54c68c7956d51996d28508d278eec31ecd6",
+  "generated_from_commit": "a900dfb22f747611e726e1f3e553aa2885582281",
   "generator": "ci/verify_release_manifest.py",
   "generator_version": "0.1.0",
   "files": [
@@ -43,6 +43,10 @@
       "sha256": "b0ce8ed9503a639e7bd7da61f6cc4ff7e1c3a4aab46fc711584bcf6c2e4aac39"
     },
     {
+      "path": "ci/validate_evidence_contract_draft.py",
+      "sha256": "bc55efe073a16759237b034f0f87827d0fe8945d20d4484ea20a581625d2804f"
+    },
+    {
       "path": "ci/validate_suite_compatibility.py",
       "sha256": "8d10cd1dd18f6406b0b1b74461504cb6117d8d3fd42b6019b94f4a8fa614f350"
     },
@@ -59,12 +63,24 @@
       "sha256": "58b6485e5458f137a72c6f49a0d39832940209a42d5762417fbff3565f8598a8"
     },
     {
+      "path": "docs/ADR-001-evidence-contract-boundary.md",
+      "sha256": "c33e2486deb3c51bed7252c3e7dfeb4b43518d6ced6eae2ec70c9abde9fdd1a1"
+    },
+    {
       "path": "docs/AGENT_EXECUTION_PROMPT.md",
       "sha256": "243c9f4efea79367494c68fb19503836826eb9a900d8cb1d54aaf2fee03acb0a"
     },
     {
       "path": "docs/AGENT_IMPLEMENTATION_PLAN.md",
       "sha256": "fd50339d5bbed70aaaaa3e82620d73fd90363f3cf2cb33a4aefd481cfbdb3aa6"
+    },
+    {
+      "path": "docs/EVIDENCE_CONTRACT_DECISION.md",
+      "sha256": "cce77c1a6ac15bf3d91c320e5cf41558ed8559384e78510c1f707cdde37b38a6"
+    },
+    {
+      "path": "docs/EVIDENCE_FIELD_MAPPING.md",
+      "sha256": "c7e7d2d1344dfa50d9406a4388521a740c708b7394297acfc526ddf70aeac0a6"
     },
     {
       "path": "docs/PROJECT_SUITE_CONTRACT_COMPATIBILITY.md",
@@ -128,7 +144,7 @@
     },
     {
       "path": "release-manifest.json",
-      "sha256": "73a914c59caee71ac93f0ae1df8d80f805deeda61b7e5b75374e76d2cd927099"
+      "sha256": "a83fb8dccf9fece3f87da508c15a125d4455e5eaa82fe0493370f8779c547675"
     },
     {
       "path": "requirements-dev.txt",
@@ -151,6 +167,10 @@
       "sha256": "73237e92b365b634974e80c175afc833a8d7e4ae7eeac500fc6e61b4a2aa658c"
     },
     {
+      "path": "schemas/evidence-bundle-v1-draft.schema.json",
+      "sha256": "7788fec6c89f4e6ab37c55ae37612dd0343669d1f33e2b9ec4e5010c9f0bade2"
+    },
+    {
       "path": "schemas/evidence-input.schema.json",
       "sha256": "104fafde279461a1e8da6931828fc5d443b9f297d1769963b28cc7a433b9e4e5"
     },
@@ -169,6 +189,30 @@
     {
       "path": "tests/conftest.py",
       "sha256": "ecea9fbcc2a6fda48957f8b34c13b97ba875a3c02183045c606f4d4abf7eb655"
+    },
+    {
+      "path": "tests/fixtures/evidence-bundle-draft/invalid/failed-without-details.yaml",
+      "sha256": "0b09078ecacc12b5eb8631baeb6b2447292d3cb3dbb2ae72f7ca164e942b19a6"
+    },
+    {
+      "path": "tests/fixtures/evidence-bundle-draft/invalid/network-without-authorization.yaml",
+      "sha256": "e7534ba57383b06de16785b96ef6cffa725d10c441a8d73c3b80f65d11d91524"
+    },
+    {
+      "path": "tests/fixtures/evidence-bundle-draft/invalid/skipped-without-reason.yaml",
+      "sha256": "6ed1effebecda48a20db0aea70f01ea0df7198b039bece3761a56b903bbbb645"
+    },
+    {
+      "path": "tests/fixtures/evidence-bundle-draft/valid/failed-bundle.yaml",
+      "sha256": "cb93c1315167ecf6c863c127a0d1e3da73abb82f486814033e426632dd214034"
+    },
+    {
+      "path": "tests/fixtures/evidence-bundle-draft/valid/passed-bundle.yaml",
+      "sha256": "39dd1a87df06796099f37d57ea30a25dd6b0a65349e78c17ec31b1bcd1c11586"
+    },
+    {
+      "path": "tests/fixtures/evidence-bundle-draft/valid/skipped-bundle.yaml",
+      "sha256": "20f2c91d923aafc87708c06e7c0be462a391f815f24992d384d0016dfbd4d9e2"
     },
     {
       "path": "tests/fixtures/evidence-input/invalid/blocked-missing-provenance.yaml",
@@ -281,6 +325,10 @@
     {
       "path": "tests/test_delivery_package.py",
       "sha256": "aa3386d050008f011b3e108d663ec14017392ac54c336271a6465e06534c1789"
+    },
+    {
+      "path": "tests/test_evidence_contract_draft.py",
+      "sha256": "bfb491d22b0f82ec693cbeda7d0184017efffa8294c656a294f0030d625488eb"
     },
     {
       "path": "tests/test_normalize_evidence_input.py",
