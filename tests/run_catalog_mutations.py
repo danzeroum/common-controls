@@ -441,14 +441,15 @@ def m18_workflow_removes_mutation_step(tmp_path: Path) -> Path:
                 wf_dir / "validate.yml")
     wf_path = wf_dir / "validate.yml"
     text = wf_path.read_text(encoding="utf-8")
-    # Remove o bloco do passo de mutações
-    mutated = text.replace(
-        """      # Passo 4: executor de mutações M01-M20 (deve produzir falha esperada em todas)
-      - name: Run catalog mutations
-        run: python tests/run_catalog_mutations.py
-
-""",
+    # Remove o bloco do passo de mutações — usa regex para casar com
+    # qualquer versão do comentário (M01-M20, M01-M25, etc)
+    import re
+    mutated = re.sub(
+        r"      # Passo 4: executor de mutações[^\n]*\n"
+        r"      - name: Run catalog mutations\n"
+        r"        run: python tests/run_catalog_mutations\.py\n\n",
         "",
+        text,
     )
     wf_path.write_text(mutated, encoding="utf-8")
     return repo
@@ -496,13 +497,225 @@ def m20_coverage_report_drift(tmp_path: Path) -> Path:
 
 
 # -----------------------------------------------------------------------------
+# Mutações M21-M25 (Sprint 4 — entrega e integridade)
+# -----------------------------------------------------------------------------
+
+def m21_remove_workflow_from_zip(tmp_path: Path) -> Path:
+    """M21: remover .github/workflows/validate.yml do pacote.
+
+    Cria um pacote ZIP sem o workflow. verify_delivery_package deve detectar
+    DELIVERY-WORKFLOW-MISSING.
+    """
+    repo = base_repo(tmp_path)
+    # Copia workflow real
+    wf_dir = repo / ".github" / "workflows"
+    wf_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / ".github" / "workflows" / "validate.yml",
+                wf_dir / "validate.yml")
+    # Copia release-manifest.json
+    shutil.copy(REPO / "release-manifest.json", repo / "release-manifest.json")
+    # Copia manifesto da suíte
+    suite_dir = repo / "suites" / "pse-suite"
+    suite_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / "suites" / "pse-suite" / "v0.3.0.yaml",
+                suite_dir / "v0.3.0.yaml")
+    # Copia docs/generated
+    cov_dir = repo / "docs" / "generated"
+    cov_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / "docs" / "generated" / "control-coverage.md",
+                cov_dir / "control-coverage.md")
+    # Copia policies
+    (repo / "policies").mkdir(exist_ok=True)
+    shutil.copy(REPO / "policies" / "evidence-evaluation.md",
+                repo / "policies" / "evidence-evaluation.md")
+    # Copia LICENSE, VERSION, README
+    shutil.copy(REPO / "LICENSE", repo / "LICENSE")
+    shutil.copy(REPO / "VERSION", repo / "VERSION")
+    shutil.copy(REPO / "README.md", repo / "README.md")
+    shutil.copy(REPO / ".gitignore", repo / ".gitignore")
+    # Copia pyproject.toml
+    shutil.copy(REPO / "pyproject.toml", repo / "pyproject.toml")
+    # Copia requirements
+    shutil.copy(REPO / "requirements.txt", repo / "requirements.txt")
+    shutil.copy(REPO / "requirements-dev.txt", repo / "requirements-dev.txt")
+    # Remove o workflow — isto é a mutação
+    (wf_dir / "validate.yml").unlink()
+    return repo
+
+
+def m22_workflow_contents_write_in_zip(tmp_path: Path) -> Path:
+    """M22: mudar permissions de contents: read para contents: write.
+
+    Modifica .github/workflows/validate.yml para usar contents: write.
+    verify_delivery_package deve detectar DELIVERY-WORKFLOW-UNSAFE-PERMISSION.
+    """
+    repo = base_repo(tmp_path)
+    wf_dir = repo / ".github" / "workflows"
+    wf_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / ".github" / "workflows" / "validate.yml",
+                wf_dir / "validate.yml")
+    # Copia release-manifest.json e outros
+    shutil.copy(REPO / "release-manifest.json", repo / "release-manifest.json")
+    suite_dir = repo / "suites" / "pse-suite"
+    suite_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / "suites" / "pse-suite" / "v0.3.0.yaml",
+                suite_dir / "v0.3.0.yaml")
+    cov_dir = repo / "docs" / "generated"
+    cov_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / "docs" / "generated" / "control-coverage.md",
+                cov_dir / "control-coverage.md")
+    (repo / "policies").mkdir(exist_ok=True)
+    shutil.copy(REPO / "policies" / "evidence-evaluation.md",
+                repo / "policies" / "evidence-evaluation.md")
+    shutil.copy(REPO / "LICENSE", repo / "LICENSE")
+    shutil.copy(REPO / "VERSION", repo / "VERSION")
+    shutil.copy(REPO / "README.md", repo / "README.md")
+    shutil.copy(REPO / ".gitignore", repo / ".gitignore")
+    shutil.copy(REPO / "pyproject.toml", repo / "pyproject.toml")
+    shutil.copy(REPO / "requirements.txt", repo / "requirements.txt")
+    shutil.copy(REPO / "requirements-dev.txt", repo / "requirements-dev.txt")
+    # Muda permissions
+    wf_path = wf_dir / "validate.yml"
+    text = wf_path.read_text(encoding="utf-8")
+    mutated = text.replace(
+        "permissions:\n  contents: read",
+        "permissions:\n  contents: write",
+    )
+    wf_path.write_text(mutated, encoding="utf-8")
+    return repo
+
+
+def m23_remove_validator_from_zip(tmp_path: Path) -> Path:
+    """M23: remover ci/validate_suite_compatibility.py do pacote.
+
+    Remove um validador crítico. verify_delivery_package deve detectar
+    DELIVERY-MANIFEST-FILE-MISSING e BATTERY-FAIL.
+    """
+    repo = base_repo(tmp_path)
+    # Copia tudo necessário (igual m21 mas sem remover workflow)
+    wf_dir = repo / ".github" / "workflows"
+    wf_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / ".github" / "workflows" / "validate.yml",
+                wf_dir / "validate.yml")
+    shutil.copy(REPO / "release-manifest.json", repo / "release-manifest.json")
+    suite_dir = repo / "suites" / "pse-suite"
+    suite_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / "suites" / "pse-suite" / "v0.3.0.yaml",
+                suite_dir / "v0.3.0.yaml")
+    cov_dir = repo / "docs" / "generated"
+    cov_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / "docs" / "generated" / "control-coverage.md",
+                cov_dir / "control-coverage.md")
+    (repo / "policies").mkdir(exist_ok=True)
+    shutil.copy(REPO / "policies" / "evidence-evaluation.md",
+                repo / "policies" / "evidence-evaluation.md")
+    shutil.copy(REPO / "LICENSE", repo / "LICENSE")
+    shutil.copy(REPO / "VERSION", repo / "VERSION")
+    shutil.copy(REPO / "README.md", repo / "README.md")
+    shutil.copy(REPO / ".gitignore", repo / ".gitignore")
+    shutil.copy(REPO / "pyproject.toml", repo / "pyproject.toml")
+    shutil.copy(REPO / "requirements.txt", repo / "requirements.txt")
+    shutil.copy(REPO / "requirements-dev.txt", repo / "requirements-dev.txt")
+    # Copia ci/ do REPO
+    ci_dir = repo / 'ci'
+    if not ci_dir.exists():
+        ci_dir.mkdir()
+    import shutil as _sh
+    for f in (REPO / 'ci').glob('*.py'):
+        _sh.copy(f, ci_dir / f.name)
+    # Remove o validador — isto é a mutação
+    (repo / 'ci' / 'validate_suite_compatibility.py').unlink()
+    return repo
+
+
+def m24_manifest_not_updated(tmp_path: Path) -> Path:
+    """M24: alterar um arquivo versionado sem atualizar release-manifest.json.
+
+    Modifica ci/validate_catalog.py sem atualizar o manifesto.
+    verify_delivery_package deve detectar DELIVERY-HASH-MISMATCH.
+    """
+    repo = base_repo(tmp_path)
+    # Copia tudo
+    wf_dir = repo / ".github" / "workflows"
+    wf_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / ".github" / "workflows" / "validate.yml",
+                wf_dir / "validate.yml")
+    shutil.copy(REPO / "release-manifest.json", repo / "release-manifest.json")
+    suite_dir = repo / "suites" / "pse-suite"
+    suite_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / "suites" / "pse-suite" / "v0.3.0.yaml",
+                suite_dir / "v0.3.0.yaml")
+    cov_dir = repo / "docs" / "generated"
+    cov_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / "docs" / "generated" / "control-coverage.md",
+                cov_dir / "control-coverage.md")
+    (repo / "policies").mkdir(exist_ok=True)
+    shutil.copy(REPO / "policies" / "evidence-evaluation.md",
+                repo / "policies" / "evidence-evaluation.md")
+    shutil.copy(REPO / "LICENSE", repo / "LICENSE")
+    shutil.copy(REPO / "VERSION", repo / "VERSION")
+    shutil.copy(REPO / "README.md", repo / "README.md")
+    shutil.copy(REPO / ".gitignore", repo / ".gitignore")
+    shutil.copy(REPO / "pyproject.toml", repo / "pyproject.toml")
+    shutil.copy(REPO / "requirements.txt", repo / "requirements.txt")
+    shutil.copy(REPO / "requirements-dev.txt", repo / "requirements-dev.txt")
+    # Copia ci/ do REPO
+    ci_dir = repo / 'ci'
+    if not ci_dir.exists():
+        ci_dir.mkdir()
+    import shutil as _sh2
+    for f in (REPO / 'ci').glob('*.py'):
+        _sh2.copy(f, ci_dir / f.name)
+    # Altera um arquivo sem atualizar o manifesto
+    vc_path = repo / "ci" / "validate_catalog.py"
+    text = vc_path.read_text(encoding="utf-8")
+    # Adiciona um comentário no final
+    mutated = text + "\n# MUTAÇÃO M24: alteração sem atualizar manifesto\n"
+    vc_path.write_text(mutated, encoding="utf-8")
+    return repo
+
+
+def m25_forbidden_file_in_zip(tmp_path: Path) -> Path:
+    """M25: incluir context-map.md ou .venv/ no pacote.
+
+    Adiciona context-map.md no diretório do repo. verify_delivery_package
+    deve detectar DELIVERY-FORBIDDEN-FILE.
+    """
+    repo = base_repo(tmp_path)
+    # Copia tudo
+    wf_dir = repo / ".github" / "workflows"
+    wf_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / ".github" / "workflows" / "validate.yml",
+                wf_dir / "validate.yml")
+    shutil.copy(REPO / "release-manifest.json", repo / "release-manifest.json")
+    suite_dir = repo / "suites" / "pse-suite"
+    suite_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / "suites" / "pse-suite" / "v0.3.0.yaml",
+                suite_dir / "v0.3.0.yaml")
+    cov_dir = repo / "docs" / "generated"
+    cov_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / "docs" / "generated" / "control-coverage.md",
+                cov_dir / "control-coverage.md")
+    (repo / "policies").mkdir(exist_ok=True)
+    shutil.copy(REPO / "policies" / "evidence-evaluation.md",
+                repo / "policies" / "evidence-evaluation.md")
+    shutil.copy(REPO / "LICENSE", repo / "LICENSE")
+    shutil.copy(REPO / "VERSION", repo / "VERSION")
+    shutil.copy(REPO / "README.md", repo / "README.md")
+    shutil.copy(REPO / ".gitignore", repo / ".gitignore")
+    shutil.copy(REPO / "pyproject.toml", repo / "pyproject.toml")
+    shutil.copy(REPO / "requirements.txt", repo / "requirements.txt")
+    shutil.copy(REPO / "requirements-dev.txt", repo / "requirements-dev.txt")
+    # Adiciona arquivo proibido
+    (repo / "context-map.md").write_text("# context-map proibido\n", encoding="utf-8")
+    return repo
+
+
+# -----------------------------------------------------------------------------
 # Tabela de mutações
 # -----------------------------------------------------------------------------
 
-# Validator kind: "catalog" | "compat" | "workflow" | "coverage"
-# M16/M17: rodam contra validate_suite_compatibility (assessment-aware)
-# M18/M19: rodam contra tests/test_workflow_static.py (teste estático do workflow)
-# M20: roda contra ci/generate_control_coverage.py --check
+# Validator kind: "catalog" | "compat" | "workflow" | "coverage" | "delivery"
 MUTATIONS: list[tuple[str, str, Callable[[Path], Path], str]] = [
     # (id, descrição, função, validator_kind)
     ("M01", "remover CTRL-DEP-001 do catalog.yaml",
@@ -547,6 +760,17 @@ MUTATIONS: list[tuple[str, str, Callable[[Path], Path], str]] = [
      m19_workflow_contents_write, "workflow"),
     ("M20", "relatório derivado alterado manualmente, --check detecta drift",
      m20_coverage_report_drift, "coverage"),
+    # Sprint 4 — entrega e integridade
+    ("M21", "remover .github/workflows/validate.yml do pacote",
+     m21_remove_workflow_from_zip, "delivery"),
+    ("M22", "mudar permissions de contents:read para contents:write",
+     m22_workflow_contents_write_in_zip, "delivery"),
+    ("M23", "remover ci/validate_suite_compatibility.py do pacote",
+     m23_remove_validator_from_zip, "delivery"),
+    ("M24", "alterar arquivo versionado sem atualizar release-manifest.json",
+     m24_manifest_not_updated, "delivery"),
+    ("M25", "incluir context-map.md ou .venv/ no pacote",
+     m25_forbidden_file_in_zip, "delivery"),
 ]
 
 
@@ -605,6 +829,34 @@ def run_mutation(mid: str, desc: str, fn: Callable[[Path], Path],
                                           "location": "docs/generated/control-coverage.md"}]}
                 return {"id": mid, "desc": desc, "ok": False,
                         "reason": f"--check passou (exit=0) — drift NÃO detectado",
+                        "findings": []}
+            elif validator_kind == "delivery":
+                # Roda verify_delivery_package contra o repo mutado
+                # Primeiro gera ZIP do repo mutado (sem git, copia arquivos)
+                import subprocess, zipfile
+                # Cria ZIP manualmente a partir do repo mutado
+                zip_tmp = Path(tempfile.mkdtemp()) / "delivery-mut.zip"
+                with zipfile.ZipFile(zip_tmp, "w", zipfile.ZIP_DEFLATED) as zf:
+                    for p in sorted(repo.rglob("*")):
+                        if p.is_file():
+                            rel = str(p.relative_to(repo))
+                            zf.write(p, f"common-controls-sprint-4/{rel}")
+                # Verifica com verify_delivery_package (sem bateria para rapidez)
+                import importlib.util
+                spec = importlib.util.spec_from_file_location(
+                    "vdp", REPO / "ci" / "verify_delivery_package.py")
+                vdp_mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(vdp_mod)
+                exit_code_dp, findings_dp = vdp_mod.verify_package(
+                    zip_tmp, repo=REPO, run_battery_check=False, quiet=True)
+                if exit_code_dp != 0:
+                    return {"id": mid, "desc": desc, "ok": True,
+                            "reason": f"verify_delivery_package falhou (exit={exit_code_dp}) — {len(findings_dp)} divergência(s)",
+                            "findings": [{"code": f.split(":")[0] if ":" in f else "DELIVERY-FAIL",
+                                          "message": f[:200],
+                                          "location": ""} for f in findings_dp[:3]]}
+                return {"id": mid, "desc": desc, "ok": False,
+                        "reason": f"verify_delivery_package passou (exit=0) — mutação NÃO detectada",
                         "findings": []}
             else:
                 return {"id": mid, "desc": desc, "ok": False,
