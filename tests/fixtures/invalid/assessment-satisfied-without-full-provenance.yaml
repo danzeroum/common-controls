@@ -3,14 +3,18 @@
 # source_commit, source_schema, artifact_hash, generated_at, subject_commit,
 # subject_tree_hash, scope_fingerprint, validator, validator_version,
 # catalog_commit. Esta fixture omite a maioria — deve falhar.
+#
+# Usa assertion P-01 (hipotética implemented) para não disparar
+# PLANNED-ASSERTION-PROMOTED — a invalidade aqui é por provenance, não por
+# lifecycle de assertion.
 control_assessment:
-  control_id: CTRL-DEP-001
+  control_id: CTRL-TEST-001
   status: satisfied
   assessed_at: "2026-08-17T12:00:00Z"
   subject_fingerprint: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   evidence:
     - source: pse-suite
-      assertion: PSE-DEP-INVENTORY-MATCH
+      assertion: P-01
       status: passed
       freshness_days: 1
       fingerprint: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"

@@ -344,10 +344,165 @@ def m15_assessment_satisfied_without_full_provenance(tmp_path: Path) -> Path:
 
 
 # -----------------------------------------------------------------------------
+# Mutações M16-M20 (Sprint 3 — enforcement + evidence bridge)
+# -----------------------------------------------------------------------------
+
+def m16_assessment_satisfied_with_planned_assertion(tmp_path: Path) -> Path:
+    """M16: assessment satisfied contém assertion planned.
+
+    Cria assessment satisfied com evidence PSE-DEP-INVENTORY-MATCH status=passed.
+    Como esta assertion é lifecycle=planned no mapping, o validador deve
+    detectar PLANNED-ASSERTION-PROMOTED.
+    """
+    repo = base_repo(tmp_path)
+    # Copia manifesto da suíte
+    suite_dir = repo / "suites" / "pse-suite"
+    suite_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / "suites" / "pse-suite" / "v0.3.0.yaml",
+                suite_dir / "v0.3.0.yaml")
+    # Cria assessment satisfied com PSE-DEP-* (planned) como passed
+    assessment = """control_assessment:
+  control_id: CTRL-DEP-001
+  status: satisfied
+  assessed_at: "2026-08-17T12:00:00Z"
+  subject_fingerprint: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  evidence:
+    - source: pse-suite
+      assertion: PSE-DEP-INVENTORY-MATCH
+      status: passed
+      freshness_days: 1
+      fingerprint: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    - source: pse-suite
+      assertion: PSE-DEP-VULNERABILITY-SCAN
+      status: passed
+      freshness_days: 1
+      fingerprint: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    - source: project
+      assertion: PROJECT-DEP-LOCAL-VALIDATED
+      status: passed
+      freshness_days: 0
+      fingerprint: "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  reasons:
+    - code: all_evidence_passed
+      message: "Todas as evidências obrigatórias foram avaliadas como passed."
+  provenance:
+    source_kind: suite_bundle
+    source_id: pse-suite
+    source_version: 0.3.0
+    source_commit: "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038"
+    source_schema: laudo-pse-1.0
+    artifact_hash: "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+    generated_at: "2026-08-17T11:55:00Z"
+    subject_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    subject_tree_hash: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    scope_fingerprint: "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+    validator: ci/validate_catalog.py
+    validator_version: 0.1.0
+    catalog_commit: "cccccccccccccccccccccccccccccccccccccccc"
+    catalog_version: 0.1.0
+"""
+    (repo / "tests" / "fixtures" / "valid").mkdir(parents=True, exist_ok=True)
+    (repo / "tests" / "fixtures" / "valid" / "assessment-mutated.yaml").write_text(
+        assessment, encoding="utf-8")
+    return repo
+
+
+def m17_mapping_planned_with_blocking_true(tmp_path: Path) -> Path:
+    """M17: mapping planned marcado blocking_eligible=true.
+
+    Modifica o mapping pse-suite-mapping.yaml para declarar PSE-DEP-*
+    com lifecycle=planned mas blocking_eligible=true (contradição).
+    O schema suite-mapping.schema.json deve rejeitar.
+    """
+    repo = base_repo(tmp_path)
+    mapping_path = repo / "mappings" / "pse-suite-mapping.yaml"
+    text = mapping_path.read_text(encoding="utf-8")
+    # Troca blocking_eligible: false por true na primeira assertion
+    mutated = text.replace(
+        "      lifecycle: planned\n      blocking_eligible: false",
+        "      lifecycle: planned\n      blocking_eligible: true",
+        1,
+    )
+    mapping_path.write_text(mutated, encoding="utf-8")
+    return repo
+
+
+def m18_workflow_removes_mutation_step(tmp_path: Path) -> Path:
+    """M18: workflow remove etapa de mutação.
+
+    Modifica .github/workflows/validate.yml para remover o passo
+    'Run catalog mutations'. O teste estático deve detectar.
+    """
+    repo = base_repo(tmp_path)
+    # Copia o workflow real
+    wf_dir = repo / ".github" / "workflows"
+    wf_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / ".github" / "workflows" / "validate.yml",
+                wf_dir / "validate.yml")
+    wf_path = wf_dir / "validate.yml"
+    text = wf_path.read_text(encoding="utf-8")
+    # Remove o bloco do passo de mutações
+    mutated = text.replace(
+        """      # Passo 4: executor de mutações M01-M20 (deve produzir falha esperada em todas)
+      - name: Run catalog mutations
+        run: python tests/run_catalog_mutations.py
+
+""",
+        "",
+    )
+    wf_path.write_text(mutated, encoding="utf-8")
+    return repo
+
+
+def m19_workflow_contents_write(tmp_path: Path) -> Path:
+    """M19: workflow recebe contents: write.
+
+    Modifica .github/workflows/validate.yml para usar contents: write.
+    O teste estático deve detectar.
+    """
+    repo = base_repo(tmp_path)
+    wf_dir = repo / ".github" / "workflows"
+    wf_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / ".github" / "workflows" / "validate.yml",
+                wf_dir / "validate.yml")
+    wf_path = wf_dir / "validate.yml"
+    text = wf_path.read_text(encoding="utf-8")
+    mutated = text.replace(
+        "permissions:\n  contents: read",
+        "permissions:\n  contents: write",
+    )
+    wf_path.write_text(mutated, encoding="utf-8")
+    return repo
+
+
+def m20_coverage_report_drift(tmp_path: Path) -> Path:
+    """M20: relatório derivado é alterado manualmente e --check detecta drift.
+
+    Modifica docs/generated/control-coverage.md manualmente. O --check do
+    generate_control_coverage.py deve detectar divergência.
+    """
+    repo = base_repo(tmp_path)
+    # Copia o relatório gerado real
+    cov_dir = repo / "docs" / "generated"
+    cov_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / "docs" / "generated" / "control-coverage.md",
+                cov_dir / "control-coverage.md")
+    cov_path = cov_dir / "control-coverage.md"
+    text = cov_path.read_text(encoding="utf-8")
+    # Altera manualmente — adiciona linha que não deveria estar lá
+    mutated = text + "\n<!-- MUTAÇÃO M20: linha adicionada manualmente -->\n"
+    cov_path.write_text(mutated, encoding="utf-8")
+    return repo
+
+
+# -----------------------------------------------------------------------------
 # Tabela de mutações
 # -----------------------------------------------------------------------------
 
-# Validator kind: "catalog" ou "compat" (qual validador rodar)
+# Validator kind: "catalog" | "compat" | "workflow" | "coverage"
+# M16/M17: rodam contra validate_suite_compatibility (assessment-aware)
+# M18/M19: rodam contra tests/test_workflow_static.py (teste estático do workflow)
+# M20: roda contra ci/generate_control_coverage.py --check
 MUTATIONS: list[tuple[str, str, Callable[[Path], Path], str]] = [
     # (id, descrição, função, validator_kind)
     ("M01", "remover CTRL-DEP-001 do catalog.yaml",
@@ -381,6 +536,17 @@ MUTATIONS: list[tuple[str, str, Callable[[Path], Path], str]] = [
      m14_manifest_release_not_verified, "compat"),
     ("M15", "assessment satisfied sem provenance completa",
      m15_assessment_satisfied_without_full_provenance, "catalog"),
+    # Sprint 3 — enforcement + evidence bridge
+    ("M16", "assessment satisfied contém assertion planned",
+     m16_assessment_satisfied_with_planned_assertion, "compat"),
+    ("M17", "mapping planned marcado blocking_eligible=true",
+     m17_mapping_planned_with_blocking_true, "catalog"),
+    ("M18", "workflow remove etapa de mutação",
+     m18_workflow_removes_mutation_step, "workflow"),
+    ("M19", "workflow recebe contents: write",
+     m19_workflow_contents_write, "workflow"),
+    ("M20", "relatório derivado alterado manualmente, --check detecta drift",
+     m20_coverage_report_drift, "coverage"),
 ]
 
 
@@ -396,18 +562,50 @@ def run_mutation(mid: str, desc: str, fn: Callable[[Path], Path],
                     "reason": f"não consegui aplicar mutação: {type(e).__name__}: {e}"}
         try:
             if validator_kind == "compat":
-                # Mutação de compatibilidade — roda validate_suite_compatibility
                 import validate_suite_compatibility as vsc
-                # M11/M12/M13/M14 rodam contra validate_suite_compatibility
-                # M15 roda contra validate_catalog com include_assessments
                 exit_code, findings = vsc.validate_directory(repo)
             elif validator_kind == "catalog":
-                # M08, M09, M15 são mutações de assessment — precisam de
-                # include_assessments=True para que o validador valide os
-                # arquivos em tests/fixtures/
                 include_assessments = mid in ("M08", "M09", "M15")
                 exit_code, findings = vc.validate_directory(
                     repo, include_assessments=include_assessments)
+            elif validator_kind == "workflow":
+                # Roda validate_workflow_at contra o workflow mutado
+                # Importa do módulo de teste estático
+                import importlib.util
+                spec = importlib.util.spec_from_file_location(
+                    "test_workflow_static",
+                    REPO / "tests" / "test_workflow_static.py",
+                )
+                twf = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(twf)
+                wf_path = repo / ".github" / "workflows" / "validate.yml"
+                exit_code_wf, errors = twf.validate_workflow_at(wf_path)
+                if exit_code_wf != 0:
+                    return {"id": mid, "desc": desc, "ok": True,
+                            "reason": f"validate_workflow_at falhou (exit={exit_code_wf}) — {len(errors)} erro(s)",
+                            "findings": [{"code": "WORKFLOW-STATIC-FAIL",
+                                          "message": "; ".join(errors)[:200],
+                                          "location": ".github/workflows/validate.yml"}]}
+                return {"id": mid, "desc": desc, "ok": False,
+                        "reason": f"validate_workflow_at passou (exit=0) — mutação NÃO detectada",
+                        "findings": []}
+            elif validator_kind == "coverage":
+                # Roda generate_control_coverage.py --check contra o repo mutado
+                import subprocess
+                result = subprocess.run(
+                    [sys.executable, str(REPO / "ci" / "generate_control_coverage.py"),
+                     "--check", "--repo", str(repo)],
+                    capture_output=True, text=True, timeout=60,
+                )
+                if result.returncode != 0:
+                    return {"id": mid, "desc": desc, "ok": True,
+                            "reason": f"--check falhou (exit={result.returncode}) — drift detectado",
+                            "findings": [{"code": "COVERAGE-DRIFT",
+                                          "message": result.stderr[-200:],
+                                          "location": "docs/generated/control-coverage.md"}]}
+                return {"id": mid, "desc": desc, "ok": False,
+                        "reason": f"--check passou (exit=0) — drift NÃO detectado",
+                        "findings": []}
             else:
                 return {"id": mid, "desc": desc, "ok": False,
                         "reason": f"validator_kind desconhecido: {validator_kind}"}
@@ -430,7 +628,7 @@ def run_mutation(mid: str, desc: str, fn: Callable[[Path], Path],
 
 def main() -> int:
     print("=" * 70)
-    print("Executor de mutações — Sprint 1+2 common-controls")
+    print("Executor de mutações — Sprint 1+2+3 common-controls")
     print(f"Total de mutações: {len(MUTATIONS)}")
     print("=" * 70)
 

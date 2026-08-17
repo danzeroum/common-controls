@@ -337,6 +337,56 @@ def cross_validate_control(control_rel: str, control_doc: dict,
 
 
 # -----------------------------------------------------------------------------
+# Cross-validation: assessment vs mapping (planned assertion promotion)
+# -----------------------------------------------------------------------------
+
+def cross_validate_assessment(assessment_rel: str, assessment_doc: dict,
+                              mappings_docs: dict[str, dict],
+                              manifests: dict, findings: list[Finding]) -> None:
+    """Valida que assessment 'satisfied' não se baseia em assertion 'planned'.
+
+    Regra PLANNED-ASSERTION-PROMOTED: mesmo um controle 'planned' não pode
+    produzir assessment 'satisfied' com base em uma evidence source ainda
+    planejada. Assertion planned não é emitida por release verificável —
+    usá-la como evidência passed é aprovar sem medir.
+    """
+    ca = assessment_doc.get("control_assessment", {}) if assessment_doc else {}
+    status = ca.get("status", "")
+    if status != "satisfied":
+        return  # só importa para satisfied
+
+    # Coletar lifecycle de todas as assertions conhecidas nos mappings
+    assertion_lifecycles: dict[str, str] = {}
+    for m_doc in mappings_docs.values():
+        sm = m_doc.get("suite_mapping", {}) if m_doc else {}
+        for a in sm.get("assertions", []) or []:
+            aid = a.get("id", "")
+            if aid:
+                assertion_lifecycles[aid] = a.get("lifecycle", "")
+
+    for i, ev in enumerate(ca.get("evidence", []) or []):
+        aid = ev.get("assertion", "")
+        ev_status = ev.get("status", "")
+        if not aid or ev_status != "passed":
+            continue
+
+        lifecycle = assertion_lifecycles.get(aid, "")
+        if lifecycle in ("planned", "draft", "withdrawn"):
+            findings.append(Finding(
+                code="PLANNED-ASSERTION-PROMOTED",
+                message=(
+                    f"assessment {assessment_rel} declara status=satisfied com "
+                    f"evidence[{i}] assertion={aid!r} status=passed, mas a "
+                    f"assertion é lifecycle={lifecycle!r} no mapping — assertion "
+                    f"planejada não pode satisfazer controle (não é emitida por "
+                    f"release verificável)"
+                ),
+                location=assessment_rel,
+                severity="critical",
+            ))
+
+
+# -----------------------------------------------------------------------------
 # Validação de IDs: checks publicados vs assertions futuras
 # -----------------------------------------------------------------------------
 
@@ -430,6 +480,24 @@ def validate_directory(repo_path: Path) -> tuple[int, list[Finding]]:
         # Cross-validation controle vs mapping (lifecycle)
         for c_rel, c_doc in controls_docs.items():
             cross_validate_control(c_rel, c_doc, mappings_docs, manifests, findings)
+
+        # Cross-validation assessment vs mapping (PLANNED-ASSERTION-PROMOTED)
+        # Varre tests/fixtures/{valid,invalid,mutations}/*assessment*.yaml
+        for d in ("tests/fixtures/valid", "tests/fixtures/invalid",
+                  "tests/fixtures/mutations"):
+            ad = repo_path / d
+            if not ad.exists():
+                continue
+            for af in sorted(ad.glob("*assessment*.yaml")):
+                af_rel = str(af.relative_to(repo_path))
+                try:
+                    doc = load_yaml_at(af)
+                except CompatibilityError:
+                    continue
+                if not isinstance(doc, dict) or "control_assessment" not in doc:
+                    continue
+                cross_validate_assessment(af_rel, doc, mappings_docs,
+                                          manifests, findings)
 
         # Validação de namespaces de ID
         validate_id_namespaces(repo_path, findings)

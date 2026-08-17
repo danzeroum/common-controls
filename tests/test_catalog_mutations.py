@@ -26,18 +26,19 @@ class TestMutationRunner:
             f"executor deve sair 0; saiu {result.returncode}\n"
             f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
         )
-        assert "15/15" in result.stdout
+        assert "20/20" in result.stdout
         assert "TODAS AS MUTAÇÕES PRODUZIRAM FALHA ESPERADA" in result.stdout
 
-    def test_runner_lists_all_fifteen_mutations(self):
-        """O executor deve listar M01 a M15."""
+    def test_runner_lists_all_twenty_mutations(self):
+        """O executor deve listar M01 a M20."""
         result = subprocess.run(
             [sys.executable, str(RUNNER)],
             capture_output=True, text=True, timeout=60,
         )
         for mid in ("M01", "M02", "M03", "M04", "M05",
                     "M06", "M07", "M08", "M09", "M10",
-                    "M11", "M12", "M13", "M14", "M15"):
+                    "M11", "M12", "M13", "M14", "M15",
+                    "M16", "M17", "M18", "M19", "M20"):
             assert f"[{mid}]" in result.stdout, f"{mid} não listada"
 
 
@@ -150,3 +151,72 @@ class TestIndividualMutations:
         repo = m15_assessment_satisfied_without_full_provenance(tmp_path)
         exit_code, findings = vc.validate_directory(repo, include_assessments=True)
         assert exit_code != 0
+
+    # --- Sprint 3: M16-M20 (enforcement + evidence bridge) ---
+
+    def test_m16(self, tmp_path):
+        from run_catalog_mutations import m16_assessment_satisfied_with_planned_assertion
+        import validate_suite_compatibility as vsc
+        repo = m16_assessment_satisfied_with_planned_assertion(tmp_path)
+        exit_code, findings = vsc.validate_directory(repo)
+        assert exit_code != 0
+        assert any(f.code == "PLANNED-ASSERTION-PROMOTED" for f in findings)
+
+    def test_m17(self, tmp_path):
+        from run_catalog_mutations import m17_mapping_planned_with_blocking_true
+        import validate_catalog as vc
+        repo = m17_mapping_planned_with_blocking_true(tmp_path)
+        exit_code, findings = vc.validate_directory(repo)
+        assert exit_code != 0
+
+    def test_m18(self, tmp_path):
+        """M18: workflow sem etapa de mutação — validate_workflow_at falha."""
+        from run_catalog_mutations import m18_workflow_removes_mutation_step
+        repo = m18_workflow_removes_mutation_step(tmp_path)
+        # Importa validate_workflow_at do teste estático
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "test_workflow_static",
+            REPO / "tests" / "test_workflow_static.py",
+        )
+        twf = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(twf)
+        wf_path = repo / ".github" / "workflows" / "validate.yml"
+        exit_code, errors = twf.validate_workflow_at(wf_path)
+        assert exit_code != 0, (
+            f"validate_workflow_at deveria falhar (workflow sem etapa de mutação); "
+            f"saiu {exit_code}\nerrors: {errors}"
+        )
+
+    def test_m19(self, tmp_path):
+        """M19: workflow com contents: write — validate_workflow_at falha."""
+        from run_catalog_mutations import m19_workflow_contents_write
+        repo = m19_workflow_contents_write(tmp_path)
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "test_workflow_static",
+            REPO / "tests" / "test_workflow_static.py",
+        )
+        twf = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(twf)
+        wf_path = repo / ".github" / "workflows" / "validate.yml"
+        exit_code, errors = twf.validate_workflow_at(wf_path)
+        assert exit_code != 0, (
+            f"validate_workflow_at deveria falhar (contents: write); "
+            f"saiu {exit_code}\nerrors: {errors}"
+        )
+
+    def test_m20(self, tmp_path):
+        """M20: relatório derivado alterado manualmente — --check falha."""
+        from run_catalog_mutations import m20_coverage_report_drift
+        repo = m20_coverage_report_drift(tmp_path)
+        import subprocess
+        result = subprocess.run(
+            [sys.executable, str(REPO / "ci" / "generate_control_coverage.py"),
+             "--check", "--repo", str(repo)],
+            capture_output=True, text=True, timeout=60,
+        )
+        assert result.returncode != 0, (
+            f"--check deveria falhar (drift detectado); "
+            f"saiu {result.returncode}\nstdout:\n{result.stdout}"
+        )
