@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://danzeroum.github.io/common-controls/schemas/control.schema.json",
+  "title": "Common assurance control",
+  "type": "object",
+  "required": ["control"],
+  "additionalProperties": false,
+  "properties": {
+    "control": {
+      "type": "object",
+      "required": ["id", "title", "purpose", "required_evidence", "evaluation", "exceptions"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "pattern": "^CTRL-[A-Z]+-[0-9]{3}$"},
+        "title": {"type": "string", "minLength": 1},
+        "purpose": {"type": "string", "minLength": 1},
+        "required_evidence": {"type": "object", "required": ["all_of"], "properties": {"all_of": {"type": "array", "minItems": 1}}},
+        "evaluation": {"type": "object", "required": ["missing_evidence", "errored_evidence", "expired_evidence"]},
+        "exceptions": {"type": "object", "required": ["allowed"]}
+      }
+    }
+  }
+}

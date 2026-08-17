@@ -1,0 +1,26 @@
+suite_mapping:
+  suite_id: pse-suite
+  contract_version: "1.0"
+  source_schema: laudo-pse-1.0
+  assertions:
+    - id: PSE-DEP-INVENTORY-MATCH
+      capability: security.dependency-inventory
+      description: >-
+        O inventário local de dependências é consistente com os manifestos
+        de dependência incluídos no escopo avaliado.
+
+    - id: PSE-DEP-VULNERABILITY-SCAN
+      capability: security.dependency-vulnerability-scan
+      description: >-
+        A varredura de vulnerabilidades de dependências foi executada no
+        escopo declarado e não encontrou vulnerabilidade acima do limiar
+        adotado pelo projeto consumidor.
+
+  result_policy:
+    accepted_assertion_statuses:
+      - passed
+    rejected_assertion_statuses:
+      - failed
+      - skipped
+      - errored
+      - not_assessed

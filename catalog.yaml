@@ -1,0 +1,11 @@
+catalog:
+  id: danzeroum-common-controls
+  version: 0.1.0
+  contract_version: "1.0"
+  control_schema: schemas/control.schema.json
+  controls:
+    - id: CTRL-DEP-001
+      path: controls/dependency-governance.yaml
+  mappings:
+    - suite: pse-suite
+      path: mappings/pse-suite.yaml

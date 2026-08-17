@@ -1,0 +1,40 @@
+control:
+  id: CTRL-DEP-001
+  title: Governança de dependências e vulnerabilidades
+  purpose: >-
+    Assegurar que dependências usadas pelo sistema sejam inventariadas,
+    tenham responsável e finalidade declarados e sejam avaliadas quanto
+    a vulnerabilidades conhecidas.
+
+  required_evidence:
+    all_of:
+      - source: pse-suite
+        assertion: PSE-DEP-INVENTORY-MATCH
+        expected_status: passed
+        freshness_days: 7
+
+      - source: pse-suite
+        assertion: PSE-DEP-VULNERABILITY-SCAN
+        expected_status: passed
+        freshness_days: 7
+
+      - source: project
+        artifact: security/dependencies.yaml
+        validator: dependency_inventory_schema
+        expected_status: passed
+
+  evaluation:
+    missing_evidence: not_satisfied
+    errored_evidence: not_satisfied
+    expired_evidence: not_satisfied
+    skipped_evidence: not_satisfied
+    not_assessed_evidence: not_satisfied
+
+  exceptions:
+    allowed: true
+    requires:
+      - risk_id
+      - owner
+      - approved_by
+      - expiry_date
+      - compensating_controls
