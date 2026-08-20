@@ -47,6 +47,7 @@ REQUIRED_PATHS = [
     "ci/validate_catalog.py",
     "ci/validate_suite_compatibility.py",
     "ci/normalize_evidence_input.py",
+    "ci/normalize_pse_evidence_bundle.py",
     "ci/generate_control_coverage.py",
     "ci/verify_release_manifest.py",
     "ci/verify_delivery_package.py",

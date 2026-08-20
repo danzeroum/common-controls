@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "repository": "danzeroum/common-controls",
   "version": "0.1.0",
-  "content_root": "sha256:d8088f13f2cf24fa9a39a0e0d5489e2a424eba2d0e34cc3b74a74510abe378f6",
+  "content_root": "sha256:fdc5022117c53cc2ef8c14374c4afbe444982568c4e90393fc7f8b3009ec70b6",
   "generator": "ci/verify_release_manifest.py",
   "generator_version": "0.1.0",
   "files": [
@@ -60,7 +60,7 @@
     },
     {
       "path": "ci/verify_release_manifest.py",
-      "sha256": "f7a84a02bd5eeda5d903c4b2414de8efce311e1c431e386d4f94eb98aea0036b"
+      "sha256": "42ffd79e218541828be793e34ddcfcf86037442d1d0ebee6ca6d616583600d56"
     },
     {
       "path": "controls/dependency-governance.yaml",
@@ -384,6 +384,7 @@
     "ci/validate_catalog.py",
     "ci/validate_suite_compatibility.py",
     "ci/normalize_evidence_input.py",
+    "ci/normalize_pse_evidence_bundle.py",
     "ci/generate_control_coverage.py",
     "ci/verify_release_manifest.py",
     "ci/verify_delivery_package.py",
