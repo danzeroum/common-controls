@@ -28,20 +28,121 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements-dev.txt
 
+      - name: Prepare reports directory and metadata
+        run: |
+          mkdir -p reports
+          PYTHON_VERSION=$(python --version 2>&1)
+          PIP_VERSION=$(pip --version 2>&1)
+          cat > reports/metadata.json <<EOF
+          {
+            "event_name": "${{ github.event_name }}",
+            "repository": "${{ github.repository }}",
+            "ref": "${{ github.ref }}",
+            "github_sha": "${{ github.sha }}",
+            "head_sha": "${{ github.event.pull_request.head.sha || '' }}",
+            "base_sha": "${{ github.event.pull_request.base.sha || '' }}",
+            "github_run_id": "${{ github.run_id }}",
+            "github_run_attempt": "${{ github.run_attempt }}",
+            "python_version": "$PYTHON_VERSION",
+            "pip_version": "$PIP_VERSION",
+            "timestamp_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+
       - name: Run test suite
-        run: python -m pytest -q
+        run: |
+          set -o pipefail
+          python -m pytest -q --junitxml=reports/junit.xml 2>&1 | tee reports/pytest.log
+          echo "${PIPESTATUS[0]}" > reports/pytest.exitcode
+        shell: bash
 
       - name: Validate catalog
-        run: python ci/validate_catalog.py
+        run: |
+          set -o pipefail
+          python ci/validate_catalog.py 2>&1 | tee reports/validate_catalog.log
+          echo "${PIPESTATUS[0]}" > reports/validate_catalog.exitcode
+        shell: bash
 
       - name: Validate suite compatibility
-        run: python ci/validate_suite_compatibility.py
+        run: |
+          set -o pipefail
+          python ci/validate_suite_compatibility.py 2>&1 | tee reports/validate_suite_compatibility.log
+          echo "${PIPESTATUS[0]}" > reports/validate_suite_compatibility.exitcode
+        shell: bash
 
-      - name: Run assurance mutations
-        run: python tests/run_catalog_mutations.py
-
-      - name: Check derived coverage report
-        run: python ci/generate_control_coverage.py --check
+      - name: Validate evidence contract draft
+        run: |
+          set -o pipefail
+          python ci/validate_evidence_contract_draft.py --quiet 2>&1 | tee reports/validate_evidence_contract_draft.log
+          echo "${PIPESTATUS[0]}" > reports/validate_evidence_contract_draft.exitcode
+        shell: bash
 
       - name: Verify release manifest
-        run: python ci/verify_release_manifest.py
+        run: |
+          set -o pipefail
+          python ci/verify_release_manifest.py 2>&1 | tee reports/verify_release_manifest.log
+          echo "${PIPESTATUS[0]}" > reports/verify_release_manifest.exitcode
+        shell: bash
+
+      - name: Verify delivery package
+        run: |
+          set -o pipefail
+          python ci/verify_delivery_package.py 2>&1 | tee reports/verify_delivery_package.log
+          echo "${PIPESTATUS[0]}" > reports/verify_delivery_package.exitcode
+        shell: bash
+
+      - name: Run assurance mutations
+        run: |
+          set -o pipefail
+          python tests/run_catalog_mutations.py 2>&1 | tee reports/run_catalog_mutations.log
+          echo "${PIPESTATUS[0]}" > reports/run_catalog_mutations.exitcode
+        shell: bash
+
+      - name: Check derived coverage report
+        run: |
+          set -o pipefail
+          python ci/generate_control_coverage.py --check 2>&1 | tee reports/generate_control_coverage.log
+          echo "${PIPESTATUS[0]}" > reports/generate_control_coverage.exitcode
+        shell: bash
+
+      - name: Generate gate summary
+        run: |
+          python3 -c "
+          import json, glob, os
+          summary = {'gates': []}
+          overall = 0
+          for f in sorted(glob.glob('reports/*.exitcode')):
+              gate = os.path.basename(f).replace('.exitcode', '')
+              with open(f) as fp:
+                  code = int(fp.read().strip())
+              log_file = f.replace('.exitcode', '.log')
+              log_content = ''
+              if os.path.exists(log_file):
+                  with open(log_file) as lf:
+                      log_content = lf.read()[-5000:]
+              summary['gates'].append({
+                  'name': gate,
+                  'exit_code': code,
+                  'log_tail': log_content
+              })
+              if code != 0:
+                  overall = 1
+          summary['overall_exit_code'] = overall
+          with open('reports/gate-summary.json', 'w') as sf:
+              json.dump(summary, sf, indent=2)
+          if overall != 0:
+              exit(1)
+          "
+
+      - name: Copy control coverage report to reports
+        run: |
+          cp docs/generated/control-coverage.md reports/control-coverage.md 2>/dev/null || true
+
+      - name: Upload validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/**
+          retention-days: 30
+          if-no-files-found: warn
