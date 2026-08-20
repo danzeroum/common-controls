@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "repository": "danzeroum/common-controls",
   "version": "0.1.0",
-  "content_root": "sha256:542e2bc9ff8e2080419124bcd17c97dd3c9ed46963134d6f9360a3ff358c6f10",
+  "content_root": "sha256:dd518b28f19b4472ba9c6d04ee39300e7d64e8f81ca540f22c311be6339abacc",
   "generator": "ci/verify_release_manifest.py",
   "generator_version": "0.1.0",
   "files": [
@@ -195,6 +195,14 @@
       "sha256": "104fafde279461a1e8da6931828fc5d443b9f297d1769963b28cc7a433b9e4e5"
     },
     {
+      "path": "schemas/finding-1.0.schema.json",
+      "sha256": "e1d8c58fd9b02e8d2622e697079f711e7e0efdebeeec30eb9c20e8a5117c9bec"
+    },
+    {
+      "path": "schemas/laudo-pse-1.0.schema.json",
+      "sha256": "ad530cf1bd050bcf63b6cfb5f8d90fe2db326939fb78dad6f65513b03c401143"
+    },
+    {
       "path": "schemas/suite-capabilities.schema.json",
       "sha256": "6b23a68158b17310d360009abd5eeb02096fc349e0f336789796d877261ae3c7"
     },
@@ -345,6 +353,10 @@
     {
       "path": "tests/fixtures/laudo-pse/valid/failed.yaml",
       "sha256": "ee651918a1ceb7a1b62a9d549384d3d38f983bfe1a1d667a2e82fd384ccf81aa"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/valid/local-execution.yaml",
+      "sha256": "e1f6af86dde746ae85f7183f07d0b23f962206e5e950c31f7ed31170940e991e"
     },
     {
       "path": "tests/fixtures/laudo-pse/valid/not-assessed.yaml",

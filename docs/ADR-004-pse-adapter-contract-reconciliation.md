@@ -218,6 +218,8 @@ python ci/normalize_pse_evidence_bundle.py \
   --output bundle.yaml \
   --runner-kind ci \
   --network-used false \
+  --local-execution false \
+  --suite-commit <sha40> \
   --subject-repository danzeroum/project \
   --subject-commit <sha40> \
   --subject-tree-hash <sha40> \
