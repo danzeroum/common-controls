@@ -2,13 +2,13 @@
   "manifest_version": "1.0",
   "repository": "danzeroum/common-controls",
   "version": "0.1.0",
-  "content_root": "sha256:6c656dd28ae3752b33892ffdd68a5ed6ccfb6587cdaa0ba2ce847be25caf6168",
+  "content_root": "sha256:86631c080e5ed6bfcbc3fe31b1c7ac90f785345525b91f51de11c9d37d1d63ec",
   "generator": "ci/verify_release_manifest.py",
   "generator_version": "0.1.0",
   "files": [
     {
       "path": ".github/workflows/validate.yml",
-      "sha256": "ccdd603daa40326cb0de83677b4c78d776d9021f4096e22d5ee9f8da682a43c3"
+      "sha256": "8abfeb8b30d8a1d699bd280fa89faffeaae2a86fb221b94d81629388f9aa3bc3"
     },
     {
       "path": ".gitignore",
