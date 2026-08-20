@@ -157,7 +157,7 @@ jobs:
         if: always()
         run: |
           python3 -c "
-          import json, glob, os
+          import json, glob, os, sys
           summary = {'gates': []}
           overall = 0
           expected_gates = [
@@ -186,6 +186,7 @@ jobs:
                   'exit_code': code,
                   'log_tail': log_content
               })
+              print(f'DEBUG: Found gate {gate} with exit_code={code}', file=sys.stderr)
               if code != 0:
                   overall = 1
           for gate in expected_gates:
@@ -195,11 +196,14 @@ jobs:
                       'exit_code': -1,
                       'log_tail': 'GATE MISSING: no exitcode file found'
                   })
+                  print(f'DEBUG: Gate {gate} MISSING', file=sys.stderr)
                   overall = 1
           summary['overall_exit_code'] = overall
+          print(f'DEBUG: overall={overall}, found_gates={found_gates}', file=sys.stderr)
           with open('reports/gate-summary.json', 'w') as sf:
               json.dump(summary, sf, indent=2)
           if overall != 0:
+              print('DEBUG: Gate summary failed, exiting with 1', file=sys.stderr)
               exit(1)
           "
 
