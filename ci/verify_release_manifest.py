@@ -89,6 +89,7 @@ REQUIRED_PATHS = [
     "docs/SPRINT_4_TEST_EVIDENCE.md",
     "docs/SPRINT_4_POST_MERGE_CHECKLIST.md",
     "docs/SPRINT_4_CLOSEOUT.md",
+    "docs/ADR-004-pse-adapter-contract-reconciliation.md",
     "requirements.txt",
     "requirements-dev.txt",
     "pyproject.toml",
@@ -99,6 +100,7 @@ REQUIRED_PATHS = [
     ".gitignore",
     "catalog.yaml",
     "policies/evidence-evaluation.md",
+    "tests/test_normalize_pse_evidence_bundle.py",
 ]
 
 
