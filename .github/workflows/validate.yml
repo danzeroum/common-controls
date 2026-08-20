@@ -50,69 +50,130 @@ jobs:
           EOF
 
       - name: Run test suite
+        continue-on-error: true
+        shell: bash
         run: |
           set -o pipefail
+          set +e
+
           python -m pytest -q --junitxml=reports/junit.xml 2>&1 | tee reports/pytest.log
-          echo "${PIPESTATUS[0]}" > reports/pytest.exitcode
-        shell: bash
+          code=${PIPESTATUS[0]}
+
+          printf '%s\n' "$code" > reports/pytest.exitcode
+          exit "$code"
 
       - name: Validate catalog
+        continue-on-error: true
+        shell: bash
         run: |
           set -o pipefail
+          set +e
+
           python ci/validate_catalog.py 2>&1 | tee reports/validate_catalog.log
-          echo "${PIPESTATUS[0]}" > reports/validate_catalog.exitcode
-        shell: bash
+          code=${PIPESTATUS[0]}
+
+          printf '%s\n' "$code" > reports/validate_catalog.exitcode
+          exit "$code"
 
       - name: Validate suite compatibility
+        continue-on-error: true
+        shell: bash
         run: |
           set -o pipefail
+          set +e
+
           python ci/validate_suite_compatibility.py 2>&1 | tee reports/validate_suite_compatibility.log
-          echo "${PIPESTATUS[0]}" > reports/validate_suite_compatibility.exitcode
-        shell: bash
+          code=${PIPESTATUS[0]}
+
+          printf '%s\n' "$code" > reports/validate_suite_compatibility.exitcode
+          exit "$code"
 
       - name: Validate evidence contract draft
+        continue-on-error: true
+        shell: bash
         run: |
           set -o pipefail
+          set +e
+
           python ci/validate_evidence_contract_draft.py --quiet 2>&1 | tee reports/validate_evidence_contract_draft.log
-          echo "${PIPESTATUS[0]}" > reports/validate_evidence_contract_draft.exitcode
-        shell: bash
+          code=${PIPESTATUS[0]}
+
+          printf '%s\n' "$code" > reports/validate_evidence_contract_draft.exitcode
+          exit "$code"
 
       - name: Verify release manifest
+        continue-on-error: true
+        shell: bash
         run: |
           set -o pipefail
+          set +e
+
           python ci/verify_release_manifest.py 2>&1 | tee reports/verify_release_manifest.log
-          echo "${PIPESTATUS[0]}" > reports/verify_release_manifest.exitcode
-        shell: bash
+          code=${PIPESTATUS[0]}
+
+          printf '%s\n' "$code" > reports/verify_release_manifest.exitcode
+          exit "$code"
 
       - name: Verify delivery package
+        continue-on-error: true
+        shell: bash
         run: |
           set -o pipefail
+          set +e
+
           python ci/verify_delivery_package.py 2>&1 | tee reports/verify_delivery_package.log
-          echo "${PIPESTATUS[0]}" > reports/verify_delivery_package.exitcode
-        shell: bash
+          code=${PIPESTATUS[0]}
+
+          printf '%s\n' "$code" > reports/verify_delivery_package.exitcode
+          exit "$code"
 
       - name: Run assurance mutations
+        continue-on-error: true
+        shell: bash
         run: |
           set -o pipefail
+          set +e
+
           python tests/run_catalog_mutations.py 2>&1 | tee reports/run_catalog_mutations.log
-          echo "${PIPESTATUS[0]}" > reports/run_catalog_mutations.exitcode
-        shell: bash
+          code=${PIPESTATUS[0]}
+
+          printf '%s\n' "$code" > reports/run_catalog_mutations.exitcode
+          exit "$code"
 
       - name: Check derived coverage report
+        continue-on-error: true
+        shell: bash
         run: |
           set -o pipefail
+          set +e
+
           python ci/generate_control_coverage.py --check 2>&1 | tee reports/generate_control_coverage.log
-          echo "${PIPESTATUS[0]}" > reports/generate_control_coverage.exitcode
-        shell: bash
+          code=${PIPESTATUS[0]}
+
+          printf '%s\n' "$code" > reports/generate_control_coverage.exitcode
+          exit "$code"
 
       - name: Generate gate summary
+        if: always()
         run: |
           python3 -c "
           import json, glob, os
           summary = {'gates': []}
           overall = 0
+          expected_gates = [
+              'pytest',
+              'validate_catalog',
+              'validate_suite_compatibility',
+              'validate_evidence_contract_draft',
+              'verify_release_manifest',
+              'verify_delivery_package',
+              'run_catalog_mutations',
+              'generate_control_coverage',
+          ]
+          found_gates = set()
           for f in sorted(glob.glob('reports/*.exitcode')):
               gate = os.path.basename(f).replace('.exitcode', '')
+              found_gates.add(gate)
               with open(f) as fp:
                   code = int(fp.read().strip())
               log_file = f.replace('.exitcode', '.log')
@@ -127,6 +188,14 @@ jobs:
               })
               if code != 0:
                   overall = 1
+          for gate in expected_gates:
+              if gate not in found_gates:
+                  summary['gates'].append({
+                      'name': gate,
+                      'exit_code': -1,
+                      'log_tail': 'GATE MISSING: no exitcode file found'
+                  })
+                  overall = 1
           summary['overall_exit_code'] = overall
           with open('reports/gate-summary.json', 'w') as sf:
               json.dump(summary, sf, indent=2)
@@ -135,6 +204,7 @@ jobs:
           "
 
       - name: Copy control coverage report to reports
+        if: always()
         run: |
           cp docs/generated/control-coverage.md reports/control-coverage.md 2>/dev/null || true
 
