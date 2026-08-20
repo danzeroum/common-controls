@@ -787,9 +787,12 @@ def m27_adapter_tamper_canonical_hash(tmp_path: Path) -> Path:
 
 
 def m28_adapter_promote_failed_to_passed(tmp_path: Path) -> Path:
-    """M28: converter failed em passed no bundle.
+    """M28: converter failed em passed no bundle (adulteração pós-emissão sem recomputação de hash).
 
-    Gera bundle com finding, muda status para passed, validador deve detectar.
+    Gera bundle com finding, muda status para passed, validador deve detectar via canonical_hash.
+
+    IMPORTANTE: Esta mutação detecta adulteração pós-emissão quando o canonical_hash não é recomputado.
+    NÃO prova autenticidade contra produtor malicioso que consegue recalcular o hash.
     """
     repo = base_repo(tmp_path)
     laudo = REPO / "tests" / "fixtures" / "laudo-pse" / "valid" / "failed.yaml"
@@ -923,6 +926,72 @@ def m31_adapter_null_authorization_with_network(tmp_path: Path) -> Path:
 
 
 # -----------------------------------------------------------------------------
+# M32 — finding de entrada removido/ignorado pelo adapter
+# -----------------------------------------------------------------------------
+
+def m32_adapter_drop_finding(tmp_path: Path) -> Path:
+    """M32: finding de entrada removido/ignorado pelo adapter.
+
+    A mutação atua antes ou durante a normalização: o laudo contém um finding válido (S-03),
+    mas o adapter falha em convertê-lo em assertion failed.
+    """
+    repo = base_repo(tmp_path)
+    # Usa failed.yaml que tem finding S-03
+    laudo = REPO / "tests" / "fixtures" / "laudo-pse" / "valid" / "failed.yaml"
+    out_bundle = repo / "evidence-bundle.yaml"
+    result = subprocess.run([
+        sys.executable, str(REPO / "ci" / "normalize_pse_evidence_bundle.py"),
+        "--input", str(laudo),
+        "--output", str(out_bundle),
+        "--runner-kind", "ci",
+        "--network-used", "true",
+        "--local-execution", "false",
+        "--suite-commit", "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038",
+        "--subject-repository", "danzeroum/project",
+        "--subject-commit", "a" * 40,
+        "--subject-tree-hash", "b" * 40,
+        "--target-lock-hash", "sha256:" + "c" * 64,
+        "--scope-fingerprint", "sha256:" + "d" * 64,
+        "--now-utc", "2026-08-20T12:00:00Z",
+    ], capture_output=True, text=True, cwd=REPO)
+    if result.returncode != 0:
+        raise RuntimeError(f"adapter falhou: {result.stderr}")
+    # Mutação: remove o finding do laudo antes de rodar o adapter novamente
+    # (simula adapter que ignora findings)
+    laudo_mutated = yaml.safe_load(laudo.read_text())
+    laudo_mutated["findings"] = []  # Remove o finding
+    # Re-gravar laudo mutado
+    import tempfile
+    with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
+        f.write(yaml.dump(laudo_mutated))
+        f.flush()
+        mutated_laudo = Path(f.name)
+    try:
+        result = subprocess.run([
+            sys.executable, str(REPO / "ci" / "normalize_pse_evidence_bundle.py"),
+            "--input", str(mutated_laudo),
+            "--output", str(out_bundle),
+            "--runner-kind", "ci",
+            "--network-used", "true",
+            "--local-execution", "false",
+            "--suite-commit", "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038",
+            "--subject-repository", "danzeroum/project",
+            "--subject-commit", "a" * 40,
+            "--subject-tree-hash", "b" * 40,
+            "--target-lock-hash", "sha256:" + "c" * 64,
+            "--scope-fingerprint", "sha256:" + "d" * 64,
+            "--now-utc", "2026-08-20T12:00:00Z",
+        ], capture_output=True, text=True, cwd=REPO)
+        if result.returncode != 0:
+            raise RuntimeError(f"adapter falhou: {result.stderr}")
+    finally:
+        mutated_laudo.unlink(missing_ok=True)
+    # O bundle gerado não deve ter assertion failed S-03
+    # O validador deve detectar que o finding foi perdido
+    return repo
+
+
+# -----------------------------------------------------------------------------
 # Tabela de mutações
 # -----------------------------------------------------------------------------
 
@@ -988,7 +1057,7 @@ MUTATIONS: list[tuple[str, str, Callable[[Path], Path], str]] = [
      m26_adapter_remove_canonical_hash, "adapter"),
     ("M27", "adulterar hash canônico do bundle",
      m27_adapter_tamper_canonical_hash, "adapter"),
-    ("M28", "converter failed em passed no bundle",
+    ("M28", "converter failed em passed no bundle (adulteração pós-emissão)",
      m28_adapter_promote_failed_to_passed, "adapter"),
     ("M29", "remover details.severity de assertion failed",
      m29_adapter_remove_severity_from_failed, "adapter"),
@@ -996,6 +1065,8 @@ MUTATIONS: list[tuple[str, str, Callable[[Path], Path], str]] = [
      m30_adapter_remove_reason_from_skipped, "adapter"),
     ("M31", "usar authorization nula em execução que exige autorização",
      m31_adapter_null_authorization_with_network, "adapter"),
+    ("M32", "finding de entrada removido/ignorado pelo adapter",
+     m32_adapter_drop_finding, "adapter"),
 ]
 
 

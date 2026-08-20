@@ -26,11 +26,11 @@ class TestMutationRunner:
             f"executor deve sair 0; saiu {result.returncode}\n"
             f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
         )
-        assert "31/31" in result.stdout
+        assert "32/32" in result.stdout
         assert "TODAS AS MUTAÇÕES PRODUZIRAM FALHA ESPERADA" in result.stdout
 
-    def test_runner_lists_all_thirtyone_mutations(self):
-        """O executor deve listar M01 a M31."""
+    def test_runner_lists_all_thirtytwo_mutations(self):
+        """O executor deve listar M01 a M32."""
         result = subprocess.run(
             [sys.executable, str(RUNNER)],
             capture_output=True, text=True, timeout=60,
@@ -40,7 +40,7 @@ class TestMutationRunner:
                     "M11", "M12", "M13", "M14", "M15",
                     "M16", "M17", "M18", "M19", "M20",
                     "M21", "M22", "M23", "M24", "M25",
-                    "M26", "M27", "M28", "M29", "M30", "M31"):
+                    "M26", "M27", "M28", "M29", "M30", "M31", "M32"):
             assert f"[{mid}]" in result.stdout, f"{mid} não listada"
 
 

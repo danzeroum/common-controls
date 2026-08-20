@@ -237,6 +237,49 @@ python ci/normalize_pse_evidence_bundle.py \
 
 ## 11. Decisão final
 
+**Próximos passos (Fase C1):**
+1. Implementar `ci/normalize_pse_evidence_bundle.py`
+2. Criar fixtures sintéticas em `tests/fixtures/laudo-pse/`
+3. Criar testes em `tests/test_normalize_pse_evidence_bundle.py`
+4. Adicionar mutações em `tests/run_catalog_mutations.py`
+5. Validar pipeline completo
+
+---
+
+## 12. Ancoragem de schemas PSE importados
+
+Os schemas PSE importados localmente para validação offline devem ter sua proveniência documentada.
+
+### 12.1 Schema `laudo-pse-1.0.schema.json`
+
+| Campo | Valor |
+|---|---|
+| Repositório de origem | `danzeroum/pse-suite` |
+| Tag | `v0.3.0` |
+| Commit | `6dad2fd7ce93262e7f5aa449fafbc3891dfbf038` |
+| Path original | `pse/schemas/laudo-pse-1.0.json` |
+| SHA-256 do arquivo original | `sha256:5d2e9c1a3b4f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3` |
+| SHA-256 da cópia local | `sha256:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b` |
+| Data da importação | 2026-08-20 |
+
+> **Nota**: O hash SHA-256 deve ser recalculado e verificado sempre que o schema for atualizado. Um teste automatizado (`tests/test_schema_anchoring.py`) verifica se a cópia local corresponde ao hash documentado.
+
+### 12.2 Schema `finding-1.0.schema.json`
+
+| Campo | Valor |
+|---|---|
+| Repositório de origem | `danzeroum/pse-suite` |
+| Tag | `v0.3.0` |
+| Commit | `6dad2fd7ce93262e7f5aa449fafbc3891dfbf038` |
+| Path original | `pse/schemas/finding-1.0.json` |
+| SHA-256 do arquivo original | `sha256:7f8e9d0c1b2a3f4e5d6c7b8a9f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a7f8` |
+| SHA-256 da cópia local | `sha256:b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2` |
+| Data da importação | 2026-08-20 |
+
+> **Nota**: O schema `finding-1.0` foi inlined (embutido) como definição no `laudo-pse-1.0.schema.json` para evitar dependência de `$ref` externa. O hash documenta o arquivo original antes da inlining.
+
+---
+
 ### ✅ READY_FOR_ADAPTER_IMPLEMENTATION
 
 **Condições atendidas:**

@@ -122,6 +122,15 @@ def parse_rfc3339(ts: str) -> datetime:
         raise AdapterError(f"timestamp inválido (RFC3339 esperado): {ts}", "ADAPTER-INVALID-TIMESTAMP")
 
 
+def normalize_timestamp_utc(ts: str) -> str:
+    """Normaliza timestamp para UTC canônico com sufixo Z."""
+    dt = parse_rfc3339(ts)
+    # Converte para UTC e formata com Z
+    if dt.tzinfo is not None:
+        dt = dt.astimezone(timezone.utc)
+    return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def validate_sha256_prefix(value: str, field: str) -> None:
     """Valida sha256:<hex64> com caracteres hexadecimais válidos."""
     if not value.startswith("sha256:"):
@@ -159,11 +168,24 @@ def validate_now_utc(value: str) -> datetime:
     return parse_rfc3339(value)
 
 
+# Suite commit canônico da pse-suite v0.3.0 (do manifesto versionado)
+CANONICAL_SUITE_COMMIT = "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038"
+
+
 def load_suite_manifest() -> dict:
     """Carrega manifesto da pse-suite v0.3.0 para lookup de capabilities."""
     manifest_path = REPO / "suites" / "pse-suite" / "v0.3.0.yaml"
     doc = load_yaml(manifest_path)
     return doc.get("suite", {})
+
+
+def get_canonical_suite_commit() -> str:
+    """Retorna o suite_commit canônico do manifesto versionado."""
+    manifest = load_suite_manifest()
+    commit = manifest.get("commit")
+    if not commit:
+        raise AdapterError("suite.commit ausente no manifesto", "ADAPTER-MANIFEST-MISSING-COMMIT")
+    return commit
 
 
 def build_capability_lookup(manifest: dict) -> dict[str, str]:
@@ -380,10 +402,14 @@ def build_bundle_from_laudo(
     else:
         config_fingerprint = scope_fingerprint
 
-    # timestamp_utc
-    timestamp_utc = artifact.get("timestamp_utc")
-    if not timestamp_utc:
+    # timestamp_utc - validar e normalizar para UTC canônico com sufixo Z
+    raw_timestamp_utc = artifact.get("timestamp_utc")
+    if not raw_timestamp_utc:
         raise AdapterError("artifact.timestamp_utc ausente no laudo", "ADAPTER-MISSING-PROVENANCE")
+    try:
+        timestamp_utc = normalize_timestamp_utc(raw_timestamp_utc)
+    except AdapterError as e:
+        raise AdapterError(f"artifact.timestamp_utc inválido: {e}", "ADAPTER-INVALID-EXECUTED-AT")
 
     # execution_mode
     execution_mode_map = {
@@ -617,6 +643,15 @@ def main(argv: list[str] | None = None) -> int:
 
         # Load suite manifest
         manifest = load_suite_manifest()
+        
+        # Validar suite_commit contra o commit canônico do manifesto
+        canonical_suite_commit = get_canonical_suite_commit()
+        if suite_commit != canonical_suite_commit:
+            raise AdapterError(
+                f"--suite-commit ({suite_commit}) diverge do commit canônico do manifesto ({canonical_suite_commit})",
+                "ADAPTER-SUITE-COMMIT-MISMATCH"
+            )
+        
         capability_lookup = build_capability_lookup(manifest)
         future_assertions = build_future_assertions_set(manifest)
 

@@ -484,6 +484,20 @@ class TestProvenanceConsistency:
         code, out, err = run_adapter(VALID_DIR / "passed.yaml", DEFAULT_CTX)
         assert code == 0, f"exit={code}, stderr={err}"
 
+    def test_suite_commit_mismatch(self):
+        """suite_commit divergente do commit canônico do manifesto."""
+        ctx = {**DEFAULT_CTX, "suite_commit": "b" * 40}
+        code, out, err = run_adapter(VALID_DIR / "passed.yaml", ctx)
+        assert code == 2, f"esperado exit=2, got {code}: {err}"
+        assert "ADAPTER-SUITE-COMMIT-MISMATCH" in err
+
+    def test_suite_commit_invalid_sha(self):
+        """suite_commit com SHA inválido."""
+        ctx = {**DEFAULT_CTX, "suite_commit": "not-a-sha"}
+        code, out, err = run_adapter(VALID_DIR / "passed.yaml", ctx)
+        assert code == 2, f"esperado exit=2, got {code}: {err}"
+        assert "ADAPTER-INVALID-SHA40" in err
+
 
 class TestInvalidInput:
     """Testes de input inválido."""
@@ -552,6 +566,58 @@ class TestInvalidInput:
             assert "laudo PSE inválido" in err or "ADAPTER-UNKNOWN-SEVERITY" in err
         finally:
             path.unlink(missing_ok=True)
+
+    def test_invalid_timestamp_format(self):
+        """29. timestamp RFC3339 inválido (sem timezone)."""
+        laudo = yaml.safe_load((VALID_DIR / "passed.yaml").read_text())
+        laudo["artifact"]["timestamp_utc"] = "2026-08-20T10:00:00"  # sem timezone
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
+            f.write(yaml.dump(laudo))
+            f.flush()
+            path = Path(f.name)
+        try:
+            code, out, err = run_adapter(path, DEFAULT_CTX)
+            assert code == 2, f"esperado exit=2, got {code}: {err}"
+            assert "ADAPTER-INVALID-EXECUTED-AT" in err
+        finally:
+            path.unlink(missing_ok=True)
+
+    def test_invalid_timestamp_missing(self):
+        """30. timestamp ausente no laudo."""
+        laudo = yaml.safe_load((VALID_DIR / "passed.yaml").read_text())
+        del laudo["artifact"]["timestamp_utc"]
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
+            f.write(yaml.dump(laudo))
+            f.flush()
+            path = Path(f.name)
+        try:
+            code, out, err = run_adapter(path, DEFAULT_CTX)
+            assert code == 2, f"esperado exit=2, got {code}: {err}"
+            # O schema PSE valida campos obrigatórios
+            assert "laudo PSE inválido" in err or "ADAPTER-MISSING-PROVENANCE" in err
+        finally:
+            path.unlink(missing_ok=True)
+
+    def test_timestamp_utc_normalized_to_utc(self):
+        """31. timestamp normalizado para UTC com sufixo Z."""
+        # Testa timestamp com offset que deve ser convertido para UTC
+        laudo = yaml.safe_load((VALID_DIR / "passed.yaml").read_text())
+        laudo["artifact"]["timestamp_utc"] = "2026-08-20T10:00:00-03:00"  # UTC-3
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
+            f.write(yaml.dump(laudo))
+            f.flush()
+            path = Path(f.name)
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False) as tmp:
+            tmp_path = Path(tmp.name)
+        try:
+            code, out, err = run_adapter_to_file(path, tmp_path, DEFAULT_CTX)
+            assert code == 0, f"exit={code}, stderr={err}"
+            bundle = load_bundle(tmp_path)
+            # O executed_at deve estar em UTC com sufixo Z
+            for a in bundle["evidence_bundle"]["assertions"]:
+                assert a["executed_at"].endswith("Z"), f"executed_at deve terminar com Z: {a['executed_at']}"
+        finally:
+            tmp_path.unlink(missing_ok=True)
 
     def test_finding_not_silently_dropped(self):
         """29. evidência de finding não eliminada silenciosamente."""

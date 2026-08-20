@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "repository": "danzeroum/common-controls",
   "version": "0.1.0",
-  "content_root": "sha256:fa9fe6200aab2ddd194d525f6076b3f27265b5eec661989410732af0c9fb9e58",
+  "content_root": "sha256:04688164f1936247ce988c1cbfa4345b62f8efdd4abc3d8418cdd4a33ee46f9a",
   "generator": "ci/verify_release_manifest.py",
   "generator_version": "0.1.0",
   "files": [
@@ -44,7 +44,7 @@
     },
     {
       "path": "ci/normalize_pse_evidence_bundle.py",
-      "sha256": "19000f1a6e252fad349bc9690013b69f7a96dea14edab32aa72461e5b50c7de4"
+      "sha256": "5e4f40731811358b44dca1ebd0c5f3bf0f7ad686d08cd3fb1794d63eef0c5614"
     },
     {
       "path": "ci/validate_catalog.py",
@@ -84,7 +84,7 @@
     },
     {
       "path": "docs/ADR-004-pse-adapter-contract-reconciliation.md",
-      "sha256": "633afc7e78d26f65361ad06beae34288f769596e3f6c534a6161af7c11d3a2f4"
+      "sha256": "f14b4ab12441e49ffea17b66a1ee1a70ef25cac924e7c61be07b28c09bb4849d"
     },
     {
       "path": "docs/AGENT_EXECUTION_PROMPT.md",
@@ -396,7 +396,7 @@
     },
     {
       "path": "tests/run_catalog_mutations.py",
-      "sha256": "258b3ebfeca4c7f81cf45688a9c80a02e2ca13cc40c7cc1e82480aa3b6588def"
+      "sha256": "7497c8013af3dc066abb5abbe0d7284ce33bcefcada9f8f7ff89ff3c0568c67d"
     },
     {
       "path": "tests/test_canonical_evidence.py",
@@ -404,7 +404,7 @@
     },
     {
       "path": "tests/test_catalog_mutations.py",
-      "sha256": "c12196f59ba6c9cfc0c0520cae4e534ba7e7832c7b61359b164a8cf5c66cb429"
+      "sha256": "7fb44963c64f01f5d912d514f5aa7007dadbc02ed657180fb96ca87824436bb3"
     },
     {
       "path": "tests/test_delivery_package.py",
@@ -420,7 +420,7 @@
     },
     {
       "path": "tests/test_normalize_pse_evidence_bundle.py",
-      "sha256": "d66e0948df294a3ffb644916bc9865f2119a0a24381b7b8fc5e473bae7f2e4b7"
+      "sha256": "36cead52dde12aa71df87e869953b54e47731ec8c7fca7442c5c787706604365"
     },
     {
       "path": "tests/test_release_manifest.py",
