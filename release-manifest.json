@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "repository": "danzeroum/common-controls",
   "version": "0.1.0",
-  "content_root": "sha256:42ef926deb43cedd51c47a0d37c7da1d9f0a9ab8ddac31a884c5a8a3054eb267",
+  "content_root": "sha256:766e62c1d88e05241a20a39a8e9f8e570256accfcd9b9a84eed713aed3c26e20",
   "generator": "ci/verify_release_manifest.py",
   "generator_version": "0.1.0",
   "files": [
@@ -165,10 +165,6 @@
     {
       "path": "pyproject.toml",
       "sha256": "e747440e7c67a8fa4c336d4087e976abbb98571950fc4f089af122c5ca2ba148"
-    },
-    {
-      "path": "reports/junit.xml",
-      "sha256": "d9667bee3f51a03bc69a9a2592851e1af5a4797eff9515a60096cc4c7efaaf3f"
     },
     {
       "path": "requirements-dev.txt",
