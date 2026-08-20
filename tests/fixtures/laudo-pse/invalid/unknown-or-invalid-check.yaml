@@ -1,0 +1,33 @@
+schema: laudo-pse-1.0
+artifact:
+  suite: pse-suite
+  suite_version: 0.3.0
+  schema_version: laudo-pse-1.0
+  catalog_hash: 33d5be7e85777045d0088c3f5f7a91e394c83c4be33cfeda519b6073be0420e3
+  repo_commit: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  config_fingerprint: sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+  timestamp_utc: '2026-08-20T10:00:00Z'
+  modo: pse_inventory
+  autorizacao: null
+veredito: conforme
+exit_code: 0
+packs:
+- privacy
+packs_desabilitados: []
+packs_fora_de_escopo: []
+relatorios: {}
+cobertura:
+  catalogo_total: 30
+  implementados_nos_packs: 30
+  executados: 1
+resumo:
+  total_findings: 0
+  por_severidade: {}
+checks_executados:
+- P-99
+checks_pulados: []
+checks_indeterminados: []
+checks_previstos: []
+findings: []
+duracao_s: 1.0
+checks_nao_habilitados: []

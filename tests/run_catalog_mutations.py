@@ -18,8 +18,10 @@ from __future__ import annotations
 
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
+import yaml
 from pathlib import Path
 from typing import Callable
 
@@ -716,10 +718,285 @@ def m25_forbidden_file_in_zip(tmp_path: Path) -> Path:
 
 
 # -----------------------------------------------------------------------------
+# Mutações M26-M31 (Sprint 5 — adapter PSE evidence-bundle)
+# -----------------------------------------------------------------------------
+
+def m26_adapter_remove_canonical_hash(tmp_path: Path) -> Path:
+    """M26: remover hash canônico do bundle gerado pelo adapter.
+
+    Gera bundle válido, remove integrity.canonical_hash, validador deve detectar.
+    """
+    repo = base_repo(tmp_path)
+    # Gera bundle válido
+    laudo = REPO / "tests" / "fixtures" / "laudo-pse" / "valid" / "passed.yaml"
+    out_bundle = repo / "evidence-bundle.yaml"
+    result = subprocess.run([
+        sys.executable, str(REPO / "ci" / "normalize_pse_evidence_bundle.py"),
+        "--input", str(laudo),
+        "--output", str(out_bundle),
+        "--runner-kind", "ci",
+        "--network-used", "false",
+        "--local-execution", "false",
+        "--suite-commit", "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038",
+        "--subject-repository", "danzeroum/project",
+        "--subject-commit", "a" * 40,
+        "--subject-tree-hash", "b" * 40,
+        "--target-lock-hash", "sha256:" + "c" * 64,
+        "--scope-fingerprint", "sha256:" + "d" * 64,
+        "--now-utc", "2026-08-20T12:00:00Z",
+    ], capture_output=True, text=True, cwd=REPO)
+    if result.returncode != 0:
+        raise RuntimeError(f"adapter falhou: {result.stderr}")
+    # Remove hash canônico
+    bundle = yaml.safe_load(out_bundle.read_text())
+    bundle["evidence_bundle"]["integrity"].pop("canonical_hash", None)
+    out_bundle.write_text(yaml.dump(bundle), encoding="utf-8")
+    return repo
+
+
+def m27_adapter_tamper_canonical_hash(tmp_path: Path) -> Path:
+    """M27: adulterar hash canônico do bundle.
+
+    Gera bundle válido, altera hash, validador deve detectar.
+    """
+    repo = base_repo(tmp_path)
+    laudo = REPO / "tests" / "fixtures" / "laudo-pse" / "valid" / "passed.yaml"
+    out_bundle = repo / "evidence-bundle.yaml"
+    result = subprocess.run([
+        sys.executable, str(REPO / "ci" / "normalize_pse_evidence_bundle.py"),
+        "--input", str(laudo),
+        "--output", str(out_bundle),
+        "--runner-kind", "ci",
+        "--network-used", "false",
+        "--local-execution", "false",
+        "--suite-commit", "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038",
+        "--subject-repository", "danzeroum/project",
+        "--subject-commit", "a" * 40,
+        "--subject-tree-hash", "b" * 40,
+        "--target-lock-hash", "sha256:" + "c" * 64,
+        "--scope-fingerprint", "sha256:" + "d" * 64,
+        "--now-utc", "2026-08-20T12:00:00Z",
+    ], capture_output=True, text=True, cwd=REPO)
+    if result.returncode != 0:
+        raise RuntimeError(f"adapter falhou: {result.stderr}")
+    # Adulterar hash
+    bundle = yaml.safe_load(out_bundle.read_text())
+    bundle["evidence_bundle"]["integrity"]["canonical_hash"] = "sha256:" + "f" * 64
+    out_bundle.write_text(yaml.dump(bundle), encoding="utf-8")
+    return repo
+
+
+def m28_adapter_promote_failed_to_passed(tmp_path: Path) -> Path:
+    """M28: converter failed em passed no bundle (adulteração pós-emissão sem recomputação de hash).
+
+    Gera bundle com finding, muda status para passed, validador deve detectar via canonical_hash.
+
+    IMPORTANTE: Esta mutação detecta adulteração pós-emissão quando o canonical_hash não é recomputado.
+    NÃO prova autenticidade contra produtor malicioso que consegue recalcular o hash.
+    """
+    repo = base_repo(tmp_path)
+    laudo = REPO / "tests" / "fixtures" / "laudo-pse" / "valid" / "failed.yaml"
+    out_bundle = repo / "evidence-bundle.yaml"
+    result = subprocess.run([
+        sys.executable, str(REPO / "ci" / "normalize_pse_evidence_bundle.py"),
+        "--input", str(laudo),
+        "--output", str(out_bundle),
+        "--runner-kind", "ci",
+        "--network-used", "true",
+        "--local-execution", "false",
+        "--suite-commit", "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038",
+        "--subject-repository", "danzeroum/project",
+        "--subject-commit", "a" * 40,
+        "--subject-tree-hash", "b" * 40,
+        "--target-lock-hash", "sha256:" + "c" * 64,
+        "--scope-fingerprint", "sha256:" + "d" * 64,
+        "--now-utc", "2026-08-20T12:00:00Z",
+    ], capture_output=True, text=True, cwd=REPO)
+    if result.returncode != 0:
+        raise RuntimeError(f"adapter falhou: {result.stderr}")
+    # Muda failed para passed
+    bundle = yaml.safe_load(out_bundle.read_text())
+    for a in bundle["evidence_bundle"]["assertions"]:
+        if a["status"] == "failed":
+            a["status"] = "passed"
+            a.pop("details", None)
+    out_bundle.write_text(yaml.dump(bundle), encoding="utf-8")
+    return repo
+
+
+def m29_adapter_remove_severity_from_failed(tmp_path: Path) -> Path:
+    """M29: remover details.severity de assertion failed.
+
+    Gera bundle com finding, remove severity, validador deve detectar.
+    """
+    repo = base_repo(tmp_path)
+    laudo = REPO / "tests" / "fixtures" / "laudo-pse" / "valid" / "failed.yaml"
+    out_bundle = repo / "evidence-bundle.yaml"
+    result = subprocess.run([
+        sys.executable, str(REPO / "ci" / "normalize_pse_evidence_bundle.py"),
+        "--input", str(laudo),
+        "--output", str(out_bundle),
+        "--runner-kind", "ci",
+        "--network-used", "true",
+        "--local-execution", "false",
+        "--suite-commit", "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038",
+        "--subject-repository", "danzeroum/project",
+        "--subject-commit", "a" * 40,
+        "--subject-tree-hash", "b" * 40,
+        "--target-lock-hash", "sha256:" + "c" * 64,
+        "--scope-fingerprint", "sha256:" + "d" * 64,
+        "--now-utc", "2026-08-20T12:00:00Z",
+    ], capture_output=True, text=True, cwd=REPO)
+    if result.returncode != 0:
+        raise RuntimeError(f"adapter falhou: {result.stderr}")
+    # Remove severity
+    bundle = yaml.safe_load(out_bundle.read_text())
+    for a in bundle["evidence_bundle"]["assertions"]:
+        if a["status"] == "failed" and "details" in a:
+            a["details"].pop("severity", None)
+    out_bundle.write_text(yaml.dump(bundle), encoding="utf-8")
+    return repo
+
+
+def m30_adapter_remove_reason_from_skipped(tmp_path: Path) -> Path:
+    """M30: remover reason de assertion skipped.
+
+    Gera bundle com skipped, remove reason, validador deve detectar.
+    """
+    repo = base_repo(tmp_path)
+    laudo = REPO / "tests" / "fixtures" / "laudo-pse" / "valid" / "skipped.yaml"
+    out_bundle = repo / "evidence-bundle.yaml"
+    result = subprocess.run([
+        sys.executable, str(REPO / "ci" / "normalize_pse_evidence_bundle.py"),
+        "--input", str(laudo),
+        "--output", str(out_bundle),
+        "--runner-kind", "ci",
+        "--network-used", "false",
+        "--local-execution", "false",
+        "--suite-commit", "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038",
+        "--subject-repository", "danzeroum/project",
+        "--subject-commit", "a" * 40,
+        "--subject-tree-hash", "b" * 40,
+        "--target-lock-hash", "sha256:" + "c" * 64,
+        "--scope-fingerprint", "sha256:" + "d" * 64,
+        "--now-utc", "2026-08-20T12:00:00Z",
+    ], capture_output=True, text=True, cwd=REPO)
+    if result.returncode != 0:
+        raise RuntimeError(f"adapter falhou: {result.stderr}")
+    # Remove reason
+    bundle = yaml.safe_load(out_bundle.read_text())
+    for a in bundle["evidence_bundle"]["assertions"]:
+        if a["status"] in ("skipped", "errored", "not_assessed"):
+            a.pop("reason", None)
+    out_bundle.write_text(yaml.dump(bundle), encoding="utf-8")
+    return repo
+
+
+def m31_adapter_null_authorization_with_network(tmp_path: Path) -> Path:
+    """M31: usar authorization nula em execução que exige autorização.
+
+    Gera bundle com network_used=true mas authorization=null, validador deve detectar.
+    """
+    repo = base_repo(tmp_path)
+    # Usa failed.yaml que tem authorization válida
+    laudo = REPO / "tests" / "fixtures" / "laudo-pse" / "valid" / "failed.yaml"
+    out_bundle = repo / "evidence-bundle.yaml"
+    result = subprocess.run([
+        sys.executable, str(REPO / "ci" / "normalize_pse_evidence_bundle.py"),
+        "--input", str(laudo),
+        "--output", str(out_bundle),
+        "--runner-kind", "ci",
+        "--network-used", "true",
+        "--local-execution", "false",
+        "--suite-commit", "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038",
+        "--subject-repository", "danzeroum/project",
+        "--subject-commit", "a" * 40,
+        "--subject-tree-hash", "b" * 40,
+        "--target-lock-hash", "sha256:" + "c" * 64,
+        "--scope-fingerprint", "sha256:" + "d" * 64,
+        "--now-utc", "2026-08-20T12:00:00Z",
+    ], capture_output=True, text=True, cwd=REPO)
+    if result.returncode != 0:
+        raise RuntimeError(f"adapter falhou: {result.stderr}")
+    # Força authorization=null no bundle gerado (simula adulteração pós-geração)
+    bundle = yaml.safe_load(out_bundle.read_text())
+    bundle["evidence_bundle"]["producer"]["authorization"] = None
+    out_bundle.write_text(yaml.dump(bundle), encoding="utf-8")
+    return repo
+
+
+# -----------------------------------------------------------------------------
+# M32 — finding de entrada removido/ignorado pelo adapter
+# -----------------------------------------------------------------------------
+
+def m32_adapter_drop_finding(tmp_path: Path) -> Path:
+    """M32: finding de entrada removido/ignorado pelo adapter.
+
+    A mutação atua antes ou durante a normalização: o laudo contém um finding válido (S-03),
+    mas o adapter falha em convertê-lo em assertion failed.
+    """
+    repo = base_repo(tmp_path)
+    # Usa failed.yaml que tem finding S-03
+    laudo = REPO / "tests" / "fixtures" / "laudo-pse" / "valid" / "failed.yaml"
+    out_bundle = repo / "evidence-bundle.yaml"
+    result = subprocess.run([
+        sys.executable, str(REPO / "ci" / "normalize_pse_evidence_bundle.py"),
+        "--input", str(laudo),
+        "--output", str(out_bundle),
+        "--runner-kind", "ci",
+        "--network-used", "true",
+        "--local-execution", "false",
+        "--suite-commit", "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038",
+        "--subject-repository", "danzeroum/project",
+        "--subject-commit", "a" * 40,
+        "--subject-tree-hash", "b" * 40,
+        "--target-lock-hash", "sha256:" + "c" * 64,
+        "--scope-fingerprint", "sha256:" + "d" * 64,
+        "--now-utc", "2026-08-20T12:00:00Z",
+    ], capture_output=True, text=True, cwd=REPO)
+    if result.returncode != 0:
+        raise RuntimeError(f"adapter falhou: {result.stderr}")
+    # Mutação: remove o finding do laudo antes de rodar o adapter novamente
+    # (simula adapter que ignora findings)
+    laudo_mutated = yaml.safe_load(laudo.read_text())
+    laudo_mutated["findings"] = []  # Remove o finding
+    # Re-gravar laudo mutado
+    import tempfile
+    with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
+        f.write(yaml.dump(laudo_mutated))
+        f.flush()
+        mutated_laudo = Path(f.name)
+    try:
+        result = subprocess.run([
+            sys.executable, str(REPO / "ci" / "normalize_pse_evidence_bundle.py"),
+            "--input", str(mutated_laudo),
+            "--output", str(out_bundle),
+            "--runner-kind", "ci",
+            "--network-used", "true",
+            "--local-execution", "false",
+            "--suite-commit", "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038",
+            "--subject-repository", "danzeroum/project",
+            "--subject-commit", "a" * 40,
+            "--subject-tree-hash", "b" * 40,
+            "--target-lock-hash", "sha256:" + "c" * 64,
+            "--scope-fingerprint", "sha256:" + "d" * 64,
+            "--now-utc", "2026-08-20T12:00:00Z",
+        ], capture_output=True, text=True, cwd=REPO)
+        if result.returncode != 0:
+            raise RuntimeError(f"adapter falhou: {result.stderr}")
+    finally:
+        mutated_laudo.unlink(missing_ok=True)
+    # O bundle gerado não deve ter assertion failed S-03
+    # O validador deve detectar que o finding foi perdido
+    return repo
+
+
+# -----------------------------------------------------------------------------
 # Tabela de mutações
 # -----------------------------------------------------------------------------
 
-# Validator kind: "catalog" | "compat" | "workflow" | "coverage" | "delivery"
+# Validator kind: "catalog" | "compat" | "workflow" | "coverage" | "delivery" | "adapter"
+
 MUTATIONS: list[tuple[str, str, Callable[[Path], Path], str]] = [
     # (id, descrição, função, validator_kind)
     ("M01", "remover CTRL-DEP-001 do catalog.yaml",
@@ -775,6 +1052,21 @@ MUTATIONS: list[tuple[str, str, Callable[[Path], Path], str]] = [
      m24_manifest_not_updated, "delivery"),
     ("M25", "incluir context-map.md ou .venv/ no pacote",
      m25_forbidden_file_in_zip, "delivery"),
+    # Sprint 5 — adapter PSE evidence-bundle
+    ("M26", "remover hash canônico do bundle gerado pelo adapter",
+     m26_adapter_remove_canonical_hash, "adapter"),
+    ("M27", "adulterar hash canônico do bundle",
+     m27_adapter_tamper_canonical_hash, "adapter"),
+    ("M28", "converter failed em passed no bundle (adulteração pós-emissão)",
+     m28_adapter_promote_failed_to_passed, "adapter"),
+    ("M29", "remover details.severity de assertion failed",
+     m29_adapter_remove_severity_from_failed, "adapter"),
+    ("M30", "remover reason de assertion skipped",
+     m30_adapter_remove_reason_from_skipped, "adapter"),
+    ("M31", "usar authorization nula em execução que exige autorização",
+     m31_adapter_null_authorization_with_network, "adapter"),
+    ("M32", "finding de entrada removido/ignorado pelo adapter",
+     m32_adapter_drop_finding, "adapter"),
 ]
 
 
@@ -861,6 +1153,48 @@ def run_mutation(mid: str, desc: str, fn: Callable[[Path], Path],
                                           "location": ""} for f in findings_dp[:3]]}
                 return {"id": mid, "desc": desc, "ok": False,
                         "reason": f"verify_delivery_package passou (exit=0) — mutação NÃO detectada",
+                        "findings": []}
+            elif validator_kind == "adapter":
+                # Roda validação de schema contra o bundle mutado
+                import importlib.util
+                import jsonschema
+                spec = importlib.util.spec_from_file_location(
+                    "vecd", REPO / "ci" / "validate_evidence_contract_draft.py")
+                vecd_mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(vecd_mod)
+                # Import canonical_evidence para verify_canonical_hash
+                ce_spec = importlib.util.spec_from_file_location(
+                    "ce", REPO / "ci" / "canonical_evidence.py")
+                ce_mod = importlib.util.module_from_spec(ce_spec)
+                ce_spec.loader.exec_module(ce_mod)
+                # Procura bundle no repo mutado
+                bundle_path = repo / "evidence-bundle.yaml"
+                if not bundle_path.exists():
+                    return {"id": mid, "desc": desc, "ok": False,
+                            "reason": f"bundle não encontrado em {bundle_path}"}
+                # Valida bundle contra schema diretamente
+                bundle = yaml.safe_load(bundle_path.read_text())
+                schema = vecd_mod.load_json(vecd_mod.SCHEMA_PATH)
+                findings_ad: list[str] = []
+                vecd_mod.validate_fixtures(schema, findings_ad)
+                vecd_mod.validate_canonical_hashes(findings_ad)
+                vecd_mod.validate_field_mapping(findings_ad)
+                # Também valida o bundle específico contra schema
+                try:
+                    jsonschema.validate(bundle, schema)
+                except jsonschema.ValidationError as e:
+                    findings_ad.append(f"bundle mutado inválido: {e.message}")
+                # Valida hash canônico do bundle específico
+                if not ce_mod.verify_canonical_hash({"evidence_bundle": bundle}):
+                    findings_ad.append("canonical_hash do bundle não confere")
+                if findings_ad:
+                    return {"id": mid, "desc": desc, "ok": True,
+                            "reason": f"validate_evidence_contract_draft falhou — mutação detectada",
+                            "findings": [{"code": "ADAPTER-CONTRACT-FAIL",
+                                          "message": f[:200],
+                                          "location": str(bundle_path)} for f in findings_ad[:3]]}
+                return {"id": mid, "desc": desc, "ok": False,
+                        "reason": f"validate_evidence_contract_draft passou — mutação NÃO detectada",
                         "findings": []}
             else:
                 return {"id": mid, "desc": desc, "ok": False,

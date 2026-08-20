@@ -2,17 +2,17 @@
   "manifest_version": "1.0",
   "repository": "danzeroum/common-controls",
   "version": "0.1.0",
-  "content_root": "sha256:f695fda9d9b2d2bd00556d7c710f97b611f71e7b1c882f667c31739de1e06692",
+  "content_root": "sha256:86631c080e5ed6bfcbc3fe31b1c7ac90f785345525b91f51de11c9d37d1d63ec",
   "generator": "ci/verify_release_manifest.py",
   "generator_version": "0.1.0",
   "files": [
     {
       "path": ".github/workflows/validate.yml",
-      "sha256": "3f9965fe4eb46c16f9e61943a4dedce20fc507684a7864a3dc7ff400f422c08c"
+      "sha256": "8abfeb8b30d8a1d699bd280fa89faffeaae2a86fb221b94d81629388f9aa3bc3"
     },
     {
       "path": ".gitignore",
-      "sha256": "c4f040e0fb719eac1eb047e7e384af6085300325ca3a7b89de38045c75f582c9"
+      "sha256": "a1dee73a850588afde2fb04e21bee1792f4b80dd9d06300dc6d8282370c19d7f"
     },
     {
       "path": "LICENSE",
@@ -43,6 +43,10 @@
       "sha256": "06e7efcf5e9f2c4e2278d7933e53e249f35eba194f325e55d766721a8b833b0d"
     },
     {
+      "path": "ci/normalize_pse_evidence_bundle.py",
+      "sha256": "5e4f40731811358b44dca1ebd0c5f3bf0f7ad686d08cd3fb1794d63eef0c5614"
+    },
+    {
       "path": "ci/validate_catalog.py",
       "sha256": "b0ce8ed9503a639e7bd7da61f6cc4ff7e1c3a4aab46fc711584bcf6c2e4aac39"
     },
@@ -60,7 +64,7 @@
     },
     {
       "path": "ci/verify_release_manifest.py",
-      "sha256": "f7a84a02bd5eeda5d903c4b2414de8efce311e1c431e386d4f94eb98aea0036b"
+      "sha256": "7dfcf7e844e8c9de8c06cc3979e4cca2579335f8c26ef3305c9f765f29901b5a"
     },
     {
       "path": "controls/dependency-governance.yaml",
@@ -77,6 +81,10 @@
     {
       "path": "docs/ADR-003-release-manifest-semantics.md",
       "sha256": "5bc0f4f074b677b85d76be453a3e02d9cef4dfaae8c4394a6c7ec3e7d57c8107"
+    },
+    {
+      "path": "docs/ADR-004-pse-adapter-contract-reconciliation.md",
+      "sha256": "f14b4ab12441e49ffea17b66a1ee1a70ef25cac924e7c61be07b28c09bb4849d"
     },
     {
       "path": "docs/AGENT_EXECUTION_PROMPT.md",
@@ -185,6 +193,14 @@
     {
       "path": "schemas/evidence-input.schema.json",
       "sha256": "104fafde279461a1e8da6931828fc5d443b9f297d1769963b28cc7a433b9e4e5"
+    },
+    {
+      "path": "schemas/finding-1.0.schema.json",
+      "sha256": "e1d8c58fd9b02e8d2622e697079f711e7e0efdebeeec30eb9c20e8a5117c9bec"
+    },
+    {
+      "path": "schemas/laudo-pse-1.0.schema.json",
+      "sha256": "ad530cf1bd050bcf63b6cfb5f8d90fe2db326939fb78dad6f65513b03c401143"
     },
     {
       "path": "schemas/suite-capabilities.schema.json",
@@ -315,6 +331,46 @@
       "sha256": "4214aab07f24c766165a48496c239aada9f2990c63f17eec678bc8d7c97e5fde"
     },
     {
+      "path": "tests/fixtures/laudo-pse/invalid/invalid-authorization.yaml",
+      "sha256": "45300aa3d46c4d55d7b22739b43af886e322b3d951089e914d9e45260a111691"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/invalid/missing-provenance.yaml",
+      "sha256": "b22fa0326f51a6eae14c896bfb83c573b2b248969068d912945d8c6052102246"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/invalid/sensitive-data.yaml",
+      "sha256": "2ad224e98e813b78be7497b2350978b36cea5bb88c96031df7687e52e864df1f"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/invalid/unknown-or-invalid-check.yaml",
+      "sha256": "0a0924ef252abfed759fc811983965e38c887c5c46cb92287e3d0d468e43a9a3"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/valid/errored.yaml",
+      "sha256": "ae0bbdf3377b8cce9a56471c56e317249b6eaae3f840a7abd992f98fa04f6413"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/valid/failed.yaml",
+      "sha256": "ee651918a1ceb7a1b62a9d549384d3d38f983bfe1a1d667a2e82fd384ccf81aa"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/valid/local-execution.yaml",
+      "sha256": "e1f6af86dde746ae85f7183f07d0b23f962206e5e950c31f7ed31170940e991e"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/valid/not-assessed.yaml",
+      "sha256": "32fad35b382008116fdba7c810fb10c8978f561c8f407b75279495e374299438"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/valid/passed.yaml",
+      "sha256": "94e59a9c9529d113f34212eb8e1367930259cf1b76919c22496dad545ec4df90"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/valid/skipped.yaml",
+      "sha256": "65f0ca84caad460f3890f8aa81d5329a1817910e7530d0515f3beeab1b9a73a1"
+    },
+    {
       "path": "tests/fixtures/mutations/README.md",
       "sha256": "799cf21ff0e11f2db31590f1a60836350be09c4c69be9f79a23ae36ff40f5b8d"
     },
@@ -340,7 +396,7 @@
     },
     {
       "path": "tests/run_catalog_mutations.py",
-      "sha256": "9e42c5d0650549f07b2265c61e57260059e14950ba5ce1292bb82df97fc940be"
+      "sha256": "7497c8013af3dc066abb5abbe0d7284ce33bcefcada9f8f7ff89ff3c0568c67d"
     },
     {
       "path": "tests/test_canonical_evidence.py",
@@ -348,7 +404,7 @@
     },
     {
       "path": "tests/test_catalog_mutations.py",
-      "sha256": "e116d6850278836313a2192e8f30f781dbc03fb6ac16ad7786bc1950a10f6215"
+      "sha256": "7fb44963c64f01f5d912d514f5aa7007dadbc02ed657180fb96ca87824436bb3"
     },
     {
       "path": "tests/test_delivery_package.py",
@@ -363,8 +419,16 @@
       "sha256": "a4c18118f4e394c4cfdd6fabdc9278b0835d6451f411c0e09addcf87db2c3351"
     },
     {
+      "path": "tests/test_normalize_pse_evidence_bundle.py",
+      "sha256": "36cead52dde12aa71df87e869953b54e47731ec8c7fca7442c5c787706604365"
+    },
+    {
       "path": "tests/test_release_manifest.py",
       "sha256": "0a46e6765e415c0d4b6c8e6114e71d18b25132002071ee8645abfd43f494b146"
+    },
+    {
+      "path": "tests/test_schema_anchoring.py",
+      "sha256": "c689395a846642e84c16031cd7e414a246db025b45596b076ae2108f2a55c5cb"
     },
     {
       "path": "tests/test_suite_compatibility.py",
@@ -384,6 +448,7 @@
     "ci/validate_catalog.py",
     "ci/validate_suite_compatibility.py",
     "ci/normalize_evidence_input.py",
+    "ci/normalize_pse_evidence_bundle.py",
     "ci/generate_control_coverage.py",
     "ci/verify_release_manifest.py",
     "ci/verify_delivery_package.py",
@@ -425,6 +490,7 @@
     "docs/SPRINT_4_TEST_EVIDENCE.md",
     "docs/SPRINT_4_POST_MERGE_CHECKLIST.md",
     "docs/SPRINT_4_CLOSEOUT.md",
+    "docs/ADR-004-pse-adapter-contract-reconciliation.md",
     "requirements.txt",
     "requirements-dev.txt",
     "pyproject.toml",
@@ -434,6 +500,7 @@
     "LICENSE",
     ".gitignore",
     "catalog.yaml",
-    "policies/evidence-evaluation.md"
+    "policies/evidence-evaluation.md",
+    "tests/test_normalize_pse_evidence_bundle.py"
   ]
 }
