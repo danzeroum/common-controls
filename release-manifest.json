@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "repository": "danzeroum/common-controls",
   "version": "0.1.0",
-  "content_root": "sha256:86631c080e5ed6bfcbc3fe31b1c7ac90f785345525b91f51de11c9d37d1d63ec",
+  "content_root": "sha256:99e4d6f00e54e58c6bb9211c620cbaa8eb17521354e8a9e4d9cff18e9f0682ef",
   "generator": "ci/verify_release_manifest.py",
   "generator_version": "0.1.0",
   "files": [
@@ -71,6 +71,10 @@
       "sha256": "58b6485e5458f137a72c6f49a0d39832940209a42d5762417fbff3565f8598a8"
     },
     {
+      "path": "demo-scaffold/Makefile",
+      "sha256": "eaa731de40ae31f19697aaff8e8a210ba54dcc8b455d98cf91434a2c257fef0e"
+    },
+    {
       "path": "docs/ADR-001-evidence-contract-boundary.md",
       "sha256": "c33e2486deb3c51bed7252c3e7dfeb4b43518d6ced6eae2ec70c9abde9fdd1a1"
     },
@@ -93,6 +97,10 @@
     {
       "path": "docs/AGENT_IMPLEMENTATION_PLAN.md",
       "sha256": "fd50339d5bbed70aaaaa3e82620d73fd90363f3cf2cb33a4aefd481cfbdb3aa6"
+    },
+    {
+      "path": "docs/CONSUMER_WALKTHROUGH.md",
+      "sha256": "e4009365e706aaed7e0f414d53cbb62e8047c932f8d76140a3fc9c8d8cb5f0b0"
     },
     {
       "path": "docs/EVIDENCE_CONTRACT_DECISION.md",
@@ -345,6 +353,10 @@
     {
       "path": "tests/fixtures/laudo-pse/invalid/unknown-or-invalid-check.yaml",
       "sha256": "0a0924ef252abfed759fc811983965e38c887c5c46cb92287e3d0d468e43a9a3"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/valid/accepted-laudo.yaml",
+      "sha256": "9f4a224d76fa31a1983ae029f02fd5f818c77b18fb8baf493626111d7c5ffb16"
     },
     {
       "path": "tests/fixtures/laudo-pse/valid/errored.yaml",
