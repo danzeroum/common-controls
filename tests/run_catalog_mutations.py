@@ -723,7 +723,7 @@ def m25_forbidden_file_in_zip(tmp_path: Path) -> Path:
 
 def m26_adapter_remove_canonical_hash(tmp_path: Path) -> Path:
     """M26: remover hash canônico do bundle gerado pelo adapter.
-    
+
     Gera bundle válido, remove integrity.canonical_hash, validador deve detectar.
     """
     repo = base_repo(tmp_path)
@@ -754,7 +754,7 @@ def m26_adapter_remove_canonical_hash(tmp_path: Path) -> Path:
 
 def m27_adapter_tamper_canonical_hash(tmp_path: Path) -> Path:
     """M27: adulterar hash canônico do bundle.
-    
+
     Gera bundle válido, altera hash, validador deve detectar.
     """
     repo = base_repo(tmp_path)
@@ -784,7 +784,7 @@ def m27_adapter_tamper_canonical_hash(tmp_path: Path) -> Path:
 
 def m28_adapter_promote_failed_to_passed(tmp_path: Path) -> Path:
     """M28: converter failed em passed no bundle.
-    
+
     Gera bundle com finding, muda status para passed, validador deve detectar.
     """
     repo = base_repo(tmp_path)
@@ -817,7 +817,7 @@ def m28_adapter_promote_failed_to_passed(tmp_path: Path) -> Path:
 
 def m29_adapter_remove_severity_from_failed(tmp_path: Path) -> Path:
     """M29: remover details.severity de assertion failed.
-    
+
     Gera bundle com finding, remove severity, validador deve detectar.
     """
     repo = base_repo(tmp_path)
@@ -849,7 +849,7 @@ def m29_adapter_remove_severity_from_failed(tmp_path: Path) -> Path:
 
 def m30_adapter_remove_reason_from_skipped(tmp_path: Path) -> Path:
     """M30: remover reason de assertion skipped.
-    
+
     Gera bundle com skipped, remove reason, validador deve detectar.
     """
     repo = base_repo(tmp_path)
@@ -881,7 +881,7 @@ def m30_adapter_remove_reason_from_skipped(tmp_path: Path) -> Path:
 
 def m31_adapter_null_authorization_with_network(tmp_path: Path) -> Path:
     """M31: usar authorization nula em execução que exige autorização.
-    
+
     Gera bundle com network_used=true mas authorization=null, validador deve detectar.
     """
     repo = base_repo(tmp_path)
