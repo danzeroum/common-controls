@@ -439,18 +439,23 @@ def m18_workflow_removes_mutation_step(tmp_path: Path) -> Path:
     shutil.copy(REPO / ".github" / "workflows" / "validate.yml",
                 wf_dir / "validate.yml")
     wf_path = wf_dir / "validate.yml"
-    text = wf_path.read_text(encoding="utf-8")
-    # Remove o bloco do passo de mutações — usa regex para casar com
-    # qualquer nome de step que contenha 'mutation' ou 'mutação'
-    import re
-    mutated = re.sub(
-        r"      - name: Run [^\n]*mutation[^\n]*\n"
-        r"        run: python tests/run_catalog_mutations\.py\n\n",
-        "",
-        text,
-        flags=re.IGNORECASE,
-    )
-    wf_path.write_text(mutated, encoding="utf-8")
+
+    import yaml
+    doc = yaml.safe_load(wf_path.read_text(encoding="utf-8"))
+
+    # Encontra o job 'validate' e remove o step que contém o comando de mutação
+    for job_name, job in (doc.get("jobs") or {}).items():
+        steps = job.get("steps") or []
+        new_steps = []
+        for step in steps:
+            run_cmd = step.get("run", "")
+            # Remove step que executa run_catalog_mutations.py
+            if "run_catalog_mutations.py" in run_cmd:
+                continue  # pula este step (remove)
+            new_steps.append(step)
+        job["steps"] = new_steps
+
+    wf_path.write_text(yaml.dump(doc, sort_keys=False, allow_unicode=True), encoding="utf-8")
     return repo
 
 
