@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "repository": "danzeroum/common-controls",
   "version": "0.1.0",
-  "generated_from_commit": "a900dfb22f747611e726e1f3e553aa2885582281",
+  "content_root": "sha256:5e5401e69d99bcf243285096365aa1485305e91a3f0920b17d36578deab4e11d",
   "generator": "ci/verify_release_manifest.py",
   "generator_version": "0.1.0",
   "files": [
@@ -12,7 +12,7 @@
     },
     {
       "path": ".gitignore",
-      "sha256": "9214002834df44ad97a09bd3e9e25ccfef5f09b7acd6298fb9a07e6b3f0f4002"
+      "sha256": "c4f040e0fb719eac1eb047e7e384af6085300325ca3a7b89de38045c75f582c9"
     },
     {
       "path": "LICENSE",
@@ -31,6 +31,10 @@
       "sha256": "35e4f4ab183abf1f2648b0f258dcc741563bfabb004775e7c8467cb046393357"
     },
     {
+      "path": "ci/canonical_evidence.py",
+      "sha256": "59022839bf7a62e8e536f91970cd5bcf876eba120c41a590e1b85c946c80d5be"
+    },
+    {
       "path": "ci/generate_control_coverage.py",
       "sha256": "26c607783632a8e0d2bf19762584d71d1d26e59e1a9acf500d5d4ec0b8b4de84"
     },
@@ -44,7 +48,7 @@
     },
     {
       "path": "ci/validate_evidence_contract_draft.py",
-      "sha256": "bc55efe073a16759237b034f0f87827d0fe8945d20d4484ea20a581625d2804f"
+      "sha256": "518e58aea7ccf387e4b2c4c543cf8c66ea82e801693b7941186738f18c75220b"
     },
     {
       "path": "ci/validate_suite_compatibility.py",
@@ -52,11 +56,11 @@
     },
     {
       "path": "ci/verify_delivery_package.py",
-      "sha256": "1958722e9482d760a180def3b90d7cdbc2e3cef0e3865b0a2004756434b9046c"
+      "sha256": "c705365375193b4275bd7a9ca4f7a540665aee243222935ed8a5c29a27008b72"
     },
     {
       "path": "ci/verify_release_manifest.py",
-      "sha256": "d8f5fe992044d53aa684311bed3af12e4f190d9491fa963768041bf29cc6390e"
+      "sha256": "f7a84a02bd5eeda5d903c4b2414de8efce311e1c431e386d4f94eb98aea0036b"
     },
     {
       "path": "controls/dependency-governance.yaml",
@@ -65,6 +69,14 @@
     {
       "path": "docs/ADR-001-evidence-contract-boundary.md",
       "sha256": "c33e2486deb3c51bed7252c3e7dfeb4b43518d6ced6eae2ec70c9abde9fdd1a1"
+    },
+    {
+      "path": "docs/ADR-002-canonical-evidence-integrity.md",
+      "sha256": "e537de68b09190b3c6656116e3780a85c6578954e2622a87ba52d116b9267d6e"
+    },
+    {
+      "path": "docs/ADR-003-release-manifest-semantics.md",
+      "sha256": "5bc0f4f074b677b85d76be453a3e02d9cef4dfaae8c4394a6c7ec3e7d57c8107"
     },
     {
       "path": "docs/AGENT_EXECUTION_PROMPT.md",
@@ -115,12 +127,16 @@
       "sha256": "9ec086cc356bc83165649f0329563381e92da2861e0e6c16b0516ca3d230383e"
     },
     {
+      "path": "docs/SPRINT_4_CLOSEOUT.md",
+      "sha256": "96e13974526b210a7233d6874d0a4c43978b6212e57255920fddf1c817949b75"
+    },
+    {
       "path": "docs/SPRINT_4_IMPLEMENTATION.md",
       "sha256": "5d5a653f5770ffea6a35ef556c0706553648374099c6ab65d9b81566b9a9dc1d"
     },
     {
       "path": "docs/SPRINT_4_POST_MERGE_CHECKLIST.md",
-      "sha256": "409cca908027ad09503effbe9099cc73db6885ddb56b863add3c8128289120b8"
+      "sha256": "f5f7d5cec030fe972fcfb5e72a7931bc5e271a57e7025db1d14c97ad0e03b8dc"
     },
     {
       "path": "docs/SPRINT_4_TEST_EVIDENCE.md",
@@ -141,10 +157,6 @@
     {
       "path": "pyproject.toml",
       "sha256": "e747440e7c67a8fa4c336d4087e976abbb98571950fc4f089af122c5ca2ba148"
-    },
-    {
-      "path": "release-manifest.json",
-      "sha256": "a83fb8dccf9fece3f87da508c15a125d4455e5eaa82fe0493370f8779c547675"
     },
     {
       "path": "requirements-dev.txt",
@@ -168,7 +180,7 @@
     },
     {
       "path": "schemas/evidence-bundle-v1-draft.schema.json",
-      "sha256": "7788fec6c89f4e6ab37c55ae37612dd0343669d1f33e2b9ec4e5010c9f0bade2"
+      "sha256": "e73ae83741ef2440ff66dd5fe5007f3365a7c43a926dc2b426bf8f6cfc71d028"
     },
     {
       "path": "schemas/evidence-input.schema.json",
@@ -191,12 +203,24 @@
       "sha256": "ecea9fbcc2a6fda48957f8b34c13b97ba875a3c02183045c606f4d4abf7eb655"
     },
     {
+      "path": "tests/fixtures/evidence-bundle-draft/invalid/authorization-null-with-network.yaml",
+      "sha256": "256e763cc43250ee39c3cd01aac947634def8ff251fa1adb3f997cce3a283f0b"
+    },
+    {
       "path": "tests/fixtures/evidence-bundle-draft/invalid/failed-without-details.yaml",
-      "sha256": "0b09078ecacc12b5eb8631baeb6b2447292d3cb3dbb2ae72f7ca164e942b19a6"
+      "sha256": "9e12d3b65299db54fac5f22e0cbb3b9b35cb1726002059bff84ba95487095429"
+    },
+    {
+      "path": "tests/fixtures/evidence-bundle-draft/invalid/failed-without-severity.yaml",
+      "sha256": "75c48ec6a059483c7afc826be02d9c9ec69bc66d1ade330d45f7212e88a876ff"
     },
     {
       "path": "tests/fixtures/evidence-bundle-draft/invalid/network-without-authorization.yaml",
       "sha256": "e7534ba57383b06de16785b96ef6cffa725d10c441a8d73c3b80f65d11d91524"
+    },
+    {
+      "path": "tests/fixtures/evidence-bundle-draft/invalid/passive-without-authorization.yaml",
+      "sha256": "a123308370032d2844cb378d6fb09a4b8fdff75bf4943d4b403a3db4abc577a2"
     },
     {
       "path": "tests/fixtures/evidence-bundle-draft/invalid/skipped-without-reason.yaml",
@@ -204,15 +228,15 @@
     },
     {
       "path": "tests/fixtures/evidence-bundle-draft/valid/failed-bundle.yaml",
-      "sha256": "cb93c1315167ecf6c863c127a0d1e3da73abb82f486814033e426632dd214034"
+      "sha256": "aa6226016791b0ebf00fa642cee202d58d531d9a1a1a4483be31fa078c4363eb"
     },
     {
       "path": "tests/fixtures/evidence-bundle-draft/valid/passed-bundle.yaml",
-      "sha256": "39dd1a87df06796099f37d57ea30a25dd6b0a65349e78c17ec31b1bcd1c11586"
+      "sha256": "336778d781210dd5167f3d787e99e3a3836324716c68db4a089f70703abce7ec"
     },
     {
       "path": "tests/fixtures/evidence-bundle-draft/valid/skipped-bundle.yaml",
-      "sha256": "20f2c91d923aafc87708c06e7c0be462a391f815f24992d384d0016dfbd4d9e2"
+      "sha256": "57933324570823e96f1b4510e21f7ce12439fd0ce6790f0618bb2f996b0c6aa8"
     },
     {
       "path": "tests/fixtures/evidence-input/invalid/blocked-missing-provenance.yaml",
@@ -319,6 +343,10 @@
       "sha256": "1c3f8f56c45ba33276fe6cbc2a3d11b667262a75afc80f33d71d955cb361bb2c"
     },
     {
+      "path": "tests/test_canonical_evidence.py",
+      "sha256": "134ac44e7c65befc419ac4a74a8a18b511cb01f9019b44e8ca71898689f01cf9"
+    },
+    {
       "path": "tests/test_catalog_mutations.py",
       "sha256": "e116d6850278836313a2192e8f30f781dbc03fb6ac16ad7786bc1950a10f6215"
     },
@@ -333,6 +361,10 @@
     {
       "path": "tests/test_normalize_evidence_input.py",
       "sha256": "a4c18118f4e394c4cfdd6fabdc9278b0835d6451f411c0e09addcf87db2c3351"
+    },
+    {
+      "path": "tests/test_release_manifest.py",
+      "sha256": "0a46e6765e415c0d4b6c8e6114e71d18b25132002071ee8645abfd43f494b146"
     },
     {
       "path": "tests/test_suite_compatibility.py",
@@ -355,12 +387,15 @@
     "ci/generate_control_coverage.py",
     "ci/verify_release_manifest.py",
     "ci/verify_delivery_package.py",
+    "ci/canonical_evidence.py",
+    "ci/validate_evidence_contract_draft.py",
     "schemas/control.schema.json",
     "schemas/control-catalog.schema.json",
     "schemas/suite-mapping.schema.json",
     "schemas/control-assessment.schema.json",
     "schemas/suite-capabilities.schema.json",
     "schemas/evidence-input.schema.json",
+    "schemas/evidence-bundle-v1-draft.schema.json",
     "controls/dependency-governance.yaml",
     "mappings/pse-suite.yaml",
     "suites/pse-suite/v0.3.0.yaml",
@@ -371,9 +406,15 @@
     "tests/test_workflow_static.py",
     "tests/test_normalize_evidence_input.py",
     "tests/test_delivery_package.py",
+    "tests/test_canonical_evidence.py",
+    "tests/test_evidence_contract_draft.py",
+    "tests/test_release_manifest.py",
     "tests/run_catalog_mutations.py",
     "docs/generated/control-coverage.md",
     "docs/PROJECT_SUITE_CONTRACT_COMPATIBILITY.md",
+    "docs/ADR-001-evidence-contract-boundary.md",
+    "docs/ADR-002-canonical-evidence-integrity.md",
+    "docs/ADR-003-release-manifest-semantics.md",
     "docs/SPRINT_1_IMPLEMENTATION.md",
     "docs/SPRINT_1_TEST_EVIDENCE.md",
     "docs/SPRINT_2_IMPLEMENTATION.md",
@@ -383,6 +424,7 @@
     "docs/SPRINT_4_IMPLEMENTATION.md",
     "docs/SPRINT_4_TEST_EVIDENCE.md",
     "docs/SPRINT_4_POST_MERGE_CHECKLIST.md",
+    "docs/SPRINT_4_CLOSEOUT.md",
     "requirements.txt",
     "requirements-dev.txt",
     "pyproject.toml",

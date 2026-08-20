@@ -135,15 +135,14 @@ def check_forbidden_files(extract_dir: Path) -> list[str]:
 
 
 def check_required_files(extract_dir: Path, manifest: dict) -> list[str]:
-    """Verifica que todos os arquivos do manifesto existem no pacote."""
+    """Verifica que todos os arquivos obrigatórios (required_paths) existem
+    no pacote — incluindo release-manifest.json, que não está em files[]."""
     findings: list[str] = []
-    manifest_files = {f["path"] for f in manifest.get("files", [])}
     required = manifest.get("required_paths", [])
     for req in required:
-        if req in manifest_files:
-            target = extract_dir / req
-            if not target.exists():
-                findings.append(f"DELIVERY-MANIFEST-FILE-MISSING: {req}")
+        target = extract_dir / req
+        if not target.exists():
+            findings.append(f"DELIVERY-MANIFEST-FILE-MISSING: {req}")
     return findings
 
 

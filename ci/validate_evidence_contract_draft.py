@@ -23,6 +23,7 @@ from typing import Any
 
 import yaml
 import jsonschema
+import canonical_evidence as ce
 
 REPO = Path(__file__).resolve().parent.parent
 SCHEMA_PATH = REPO / "schemas" / "evidence-bundle-v1-draft.schema.json"
@@ -74,9 +75,17 @@ def validate_fixtures(schema: dict, findings: list[str]) -> None:
             pass  # esperado
 
 
+def validate_canonical_hashes(findings: list[str]) -> None:
+    """Verifica que fixtures válidas têm canonical_hash correto (recomputa)."""
+    for f in sorted(VALID_DIR.glob("*.yaml")):
+        doc = load_yaml(f)
+        if not ce.verify_canonical_hash(doc):
+            findings.append(
+                f"CANONICAL-HASH-MISMATCH: {f.name} — hash recomputado não bate"
+            )
+
+
 def validate_field_mapping(findings: list[str]) -> None:
-    """Verifica que campos essenciais de laudo-pse-1.0 têm correspondência
-    no draft de evidence-bundle/v1 (documentado em EVIDENCE_FIELD_MAPPING.md)."""
     schema = load_json(SCHEMA_PATH)
     eb_props = schema["properties"]["evidence_bundle"]["properties"]
     producer_props = eb_props["producer"]["properties"]
@@ -145,7 +154,10 @@ def main(argv: list[str] | None = None) -> int:
     # 2. Fixtures
     validate_fixtures(schema, findings)
 
-    # 3. Mapeamento de campos
+    # 3. Hash canônico das fixtures válidas
+    validate_canonical_hashes(findings)
+
+    # 4. Mapeamento de campos
     validate_field_mapping(findings)
 
     if not findings:

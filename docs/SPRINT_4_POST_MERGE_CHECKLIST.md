@@ -44,8 +44,9 @@ Verifique:
 ## 4. Verificar release-manifest
 
 - [ ] `release-manifest.json` existe no `main`.
-- [ ] Rodar `python ci/verify_release_manifest.py` localmente contra o `main` — deve sair `exit 0`.
-- [ ] O `generated_from_commit` no manifesto corresponde ao SHA do commit de merge.
+- [ ] Rodar `python ci/verify_release_manifest.py` localmente contra o `main` — deve sair `exit 0` sem warnings.
+- [ ] O `content_root` no manifesto corresponde ao recomputado a partir de `files[]` (verificado automaticamente pelo verificador).
+- [ ] `release-manifest.json` está excluído de `files[]` mas presente em `required_paths` (sem auto-referência de hash).
 
 ## 5. Verificar que nenhum arquivo obrigatório foi omitido
 

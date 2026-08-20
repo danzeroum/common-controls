@@ -25,4 +25,4 @@ evidence_bundle:
       capability: privacy.log-pii-masking
       executed_at: "2026-08-17T11:55:00Z"
   integrity:
-    canonical_hash: "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    canonical_hash: "sha256:2e47c55cd4d56f6a79d592824c414b5b98a982261392ba67f58883fe59d3beda"

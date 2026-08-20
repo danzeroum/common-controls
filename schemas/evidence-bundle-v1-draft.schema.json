@@ -46,7 +46,7 @@
               "properties": {
                 "attested_by": {"type": ["string", "null"]},
                 "scope": {"type": "array", "items": {"type": "string"}},
-                "expires": {"type": ["string", "null"]},
+                "expires": {"type": ["string", "null"], "format": "date-time"},
                 "target_fingerprint": {"type": ["string", "null"]},
                 "synthetic_identities": {"type": ["boolean", "null"]}
               }
@@ -157,14 +157,19 @@
               "assertions": {
                 "items": {
                   "if": {"properties": {"status": {"const": "failed"}}},
-                  "then": {"required": ["details"]}
+                  "then": {
+                    "required": ["details"],
+                    "properties": {
+                      "details": {"required": ["severity"]}
+                    }
+                  }
                 }
               }
             }
           }
         },
         {
-          "description": "network_used=true ou execution_mode != inventory exige authorization não-null.",
+          "description": "network_used=true exige authorization não-null (objeto).",
           "if": {
             "properties": {
               "producer": {
@@ -176,7 +181,30 @@
           },
           "then": {
             "properties": {
-              "producer": {"required": ["authorization"]}
+              "producer": {
+                "required": ["authorization"],
+                "properties": {"authorization": {"type": "object"}}
+              }
+            }
+          }
+        },
+        {
+          "description": "execution_mode em passive/load/active_discovery exige authorization não-null, mesmo se network_used=false.",
+          "if": {
+            "properties": {
+              "producer": {
+                "properties": {
+                  "execution_mode": {"enum": ["passive", "load", "active_discovery"]}
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "producer": {
+                "required": ["authorization"],
+                "properties": {"authorization": {"type": "object"}}
+              }
             }
           }
         }

@@ -14,7 +14,7 @@ evidence_bundle:
     authorization:
       attested_by: "human@domain"
       scope: ["pse_passive"]
-      expires: "2026-12-31"
+      expires: "2026-12-31T23:59:59Z"
       target_fingerprint: "sha256:5555555555555555555555555555555555555555555555555555555555555555"
       synthetic_identities: false
   subject:
@@ -34,4 +34,4 @@ evidence_bundle:
         summary: "PII em payload de erro"
         dimension: security
   integrity:
-    canonical_hash: "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+    canonical_hash: "sha256:5a3626dea7dd7fadc9c8e0b6ba456a988b2505248d9b43a9761385dd9c2fa3dd"
