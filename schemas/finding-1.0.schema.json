@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://danzeroum.github.io/pse-suite/schemas/finding-1.0.json",
+  "type": "object",
+  "required": [
+    "check_id",
+    "pack",
+    "severidade",
+    "titulo",
+    "descricao",
+    "recomendacao"
+  ],
+  "properties": {
+    "check_id": {
+      "type": "string",
+      "pattern": "^[PSE]-[0-9]{2}$"
+    },
+    "pack": {
+      "enum": [
+        "privacy",
+        "security",
+        "ethics"
+      ]
+    },
+    "severidade": {
+      "enum": [
+        "CRITICO",
+        "ALTO",
+        "MEDIO",
+        "BAIXO",
+        "INFO"
+      ]
+    },
+    "titulo": {
+      "type": "string",
+      "minLength": 1
+    },
+    "descricao": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recomendacao": {
+      "type": "string",
+      "minLength": 1
+    },
+    "base_legal": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "arquivo": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "linha": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "snippet": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Sanitizado com a propria regua antes de serializar: a evidencia nao republica o dado que denuncia. O localizador do achado e arquivo:linha, nunca o literal."
+    },
+    "trace": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Trabalho A: requisicao/resposta que provam o achado, sanitizadas na ORIGEM (Finding.__post_init__), nao na serializacao. O valor do token nunca e gravado, nem mascarado.",
+      "properties": {
+        "requisicao": {
+          "type": "object",
+          "properties": {
+            "metodo": {
+              "type": "string"
+            },
+            "rota": {
+              "type": "string"
+            },
+            "identidade": {
+              "type": "string"
+            },
+            "autenticada": {
+              "type": "boolean"
+            },
+            "corpo": {}
+          }
+        },
+        "resposta": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "integer"
+            },
+            "corpo_amostra": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

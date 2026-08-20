@@ -1,0 +1,457 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://danzeroum.github.io/pse-suite/schemas/laudo-pse-1.0.json",
+  "type": "object",
+  "required": [
+    "schema",
+    "artifact",
+    "veredito",
+    "exit_code",
+    "packs",
+    "resumo",
+    "checks_executados",
+    "checks_pulados",
+    "checks_indeterminados",
+    "findings"
+  ],
+  "properties": {
+    "schema": {
+      "const": "laudo-pse-1.0"
+    },
+    "artifact": {
+      "type": "object",
+      "description": "Procedencia. A quintupla (suite, version, commit, catalog_hash, schema_version) e o que torna dois laudos comparaveis.",
+      "required": [
+        "suite",
+        "suite_version",
+        "schema_version",
+        "catalog_hash",
+        "timestamp_utc"
+      ],
+      "properties": {
+        "suite": {
+          "const": "pse-suite"
+        },
+        "suite_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "catalog_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "repo_commit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "config_fingerprint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "timestamp_utc": {
+          "type": "string"
+        },
+        "modo": {
+          "enum": [
+            "pse_inventory",
+            "pse_passive",
+            "pse_active"
+          ]
+        },
+        "autorizacao": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Atestacao carimbada no laudo: quem autorizou, o que, ate quando. Nunca os segredos \u2014 os tokens sao lidos por nome de variavel e nao entram aqui.",
+          "properties": {
+            "attested_by": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "scope": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "expires": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "target_fingerprint": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "synthetic_identities": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "veredito": {
+      "enum": [
+        "conforme",
+        "violacao",
+        "indeterminado",
+        "entrada_invalida"
+      ]
+    },
+    "exit_code": {
+      "enum": [
+        0,
+        10,
+        11,
+        20,
+        30
+      ]
+    },
+    "packs": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "privacy",
+          "security",
+          "ethics"
+        ]
+      }
+    },
+    "packs_desabilitados": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "pack",
+          "motivo"
+        ],
+        "properties": {
+          "pack": {
+            "enum": [
+              "privacy",
+              "security",
+              "ethics"
+            ]
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "packs_fora_de_escopo": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "pack",
+          "motivo"
+        ],
+        "properties": {
+          "pack": {
+            "enum": [
+              "privacy",
+              "security",
+              "ethics"
+            ]
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "relatorios": {
+      "type": "object",
+      "description": "Estado, nao defeito. Ex.: cobertura_catalogo \u2014 quantos campos existem, quantos estao completos. O consumidor precisa saber o quanto ja esta certo, nao so o que esta errado.",
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "cobertura": {
+      "type": "object",
+      "properties": {
+        "catalogo_total": {
+          "type": "integer"
+        },
+        "implementados_nos_packs": {
+          "type": "integer"
+        },
+        "executados": {
+          "type": "integer"
+        }
+      }
+    },
+    "resumo": {
+      "type": "object",
+      "required": [
+        "total_findings",
+        "por_severidade"
+      ],
+      "properties": {
+        "total_findings": {
+          "type": "integer"
+        },
+        "por_severidade": {
+          "type": "object"
+        }
+      }
+    },
+    "checks_executados": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[PSE]-[0-9]{2}$"
+      }
+    },
+    "checks_pulados": {
+      "type": "array",
+      "description": "N/A declarado. Motivo obrigatorio: um check pulado nunca e indistinguivel de um check verde.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "motivo"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[PSE]-[0-9]{2}$"
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "checks_indeterminados": {
+      "type": "array",
+      "description": "Tentei e nao consegui decidir. Bloqueia igual a uma violacao (exit 20).",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "motivo"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[PSE]-[0-9]{2}$"
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "checks_previstos": {
+      "type": "array",
+      "description": "Declarados no catalogo da suite e ainda nao implementados. Previsto e ausente nunca e silencio.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "motivo"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[PSE]-[0-9]{2}$"
+          },
+          "pack": {
+            "enum": [
+              "privacy",
+              "security",
+              "ethics"
+            ]
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "previsto-fase-2",
+              "previsto-fase-3"
+            ]
+          },
+          "modo": {
+            "enum": [
+              "inventory",
+              "passive",
+              "active"
+            ]
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/finding-1.0"
+      }
+    },
+    "duracao_s": {
+      "type": "number"
+    },
+    "checks_nao_habilitados": {
+      "type": "array",
+      "description": "Previsto e NAO habilitado nesta execucao: o consumidor nao pediu Trabalho A, ou pediu num modo que nao inclui este check. Omissao declarada \u2014 nao bloqueia, mas nunca some.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "motivo"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[PSE]-[0-9]{2}$"
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "finding-1.0": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://danzeroum.github.io/pse-suite/schemas/finding-1.0.json",
+      "type": "object",
+      "required": [
+        "check_id",
+        "pack",
+        "severidade",
+        "titulo",
+        "descricao",
+        "recomendacao"
+      ],
+      "properties": {
+        "check_id": {
+          "type": "string",
+          "pattern": "^[PSE]-[0-9]{2}$"
+        },
+        "pack": {
+          "enum": [
+            "privacy",
+            "security",
+            "ethics"
+          ]
+        },
+        "severidade": {
+          "enum": [
+            "CRITICO",
+            "ALTO",
+            "MEDIO",
+            "BAIXO",
+            "INFO"
+          ]
+        },
+        "titulo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "descricao": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recomendacao": {
+          "type": "string",
+          "minLength": 1
+        },
+        "base_legal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "arquivo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "linha": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "snippet": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Sanitizado com a propria regua antes de serializar: a evidencia nao republica o dado que denuncia. O localizador do achado e arquivo:linha, nunca o literal."
+        },
+        "trace": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Trabalho A: requisicao/resposta que provam o achado, sanitizadas na ORIGEM (Finding.__post_init__), nao na serializacao. O valor do token nunca e gravado, nem mascarado.",
+          "properties": {
+            "requisicao": {
+              "type": "object",
+              "properties": {
+                "metodo": {
+                  "type": "string"
+                },
+                "rota": {
+                  "type": "string"
+                },
+                "identidade": {
+                  "type": "string"
+                },
+                "autenticada": {
+                  "type": "boolean"
+                },
+                "corpo": {}
+              }
+            },
+            "resposta": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer"
+                },
+                "corpo_amostra": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

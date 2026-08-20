@@ -4,8 +4,8 @@ artifact:
   suite_version: 0.3.0
   schema_version: laudo-pse-1.0
   catalog_hash: 33d5be7e85777045d0088c3f5f7a91e394c83c4be33cfeda519b6073be0420e3
-  repo_commit: 6dad2fd7ce93262e7f5aa449fafbc3891dfbf038
-  config_fingerprint: sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+  repo_commit: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  config_fingerprint: sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
   timestamp_utc: '2026-08-20T10:00:00Z'
   modo: pse_inventory
   autorizacao: null

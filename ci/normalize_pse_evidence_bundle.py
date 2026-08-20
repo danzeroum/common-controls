@@ -15,6 +15,8 @@ Interface:
     --output <evidence-bundle.yaml> \
     --runner-kind <agent|human|ci> \
     --network-used <true|false> \
+    --local-execution <true|false> \
+    --suite-commit <sha40> \
     --subject-repository <owner/repo> \
     --subject-commit <sha40> \
     --subject-tree-hash <sha40> \
@@ -43,6 +45,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -50,13 +53,14 @@ from typing import Any
 
 import yaml
 import jsonschema
+from jsonschema import RefResolver
 
 import canonical_evidence as ce
 
 REPO = Path(__file__).resolve().parent.parent
 ADAPTER_VERSION = "0.1.0"
 
-# Erros específicos do adapter
+# Códigos de erro do adapter
 class AdapterError(Exception):
     """Erro do adapter com código específico."""
     def __init__(self, message: str, code: str = "ADAPTER-ERROR"):
@@ -91,10 +95,13 @@ def load_schema(path: Path) -> dict:
         raise AdapterError(f"schema {path} JSON inválido: {e}", "ADAPTER-SCHEMA-JSON")
 
 
-def validate_against_schema(doc: Any, schema: dict, doc_label: str, schema_label: str) -> list[str]:
+def validate_against_schema(doc: Any, schema: dict, doc_label: str, schema_label: str, resolver: RefResolver | None = None) -> list[str]:
     errors: list[str] = []
     try:
-        jsonschema.validate(doc, schema)
+        if resolver is not None:
+            jsonschema.validate(doc, schema, resolver=resolver)
+        else:
+            jsonschema.validate(doc, schema)
     except jsonschema.ValidationError as e:
         path = ".".join(str(p) for p in e.absolute_path) or "<root>"
         errors.append(f"{doc_label} ({schema_label}::{path}): {e.message}")
@@ -102,6 +109,13 @@ def validate_against_schema(doc: Any, schema: dict, doc_label: str, schema_label
 
 
 def parse_rfc3339(ts: str) -> datetime:
+    """Parse RFC3339 timestamp. Rejeita timestamps sem timezone."""
+    if not ts:
+        raise AdapterError("timestamp vazio", "ADAPTER-INVALID-TIMESTAMP")
+    # Verifica se tem timezone (Z ou +HH:MM / -HH:MM)
+    tz_pattern = r'(Z|[+-]\d{2}:?\d{2})$'
+    if not re.search(tz_pattern, ts):
+        raise AdapterError(f"timestamp sem timezone (RFC3339 com timezone obrigatório): {ts}", "ADAPTER-INVALID-TIMESTAMP")
     try:
         return datetime.fromisoformat(ts.replace("Z", "+00:00"))
     except (ValueError, AttributeError) as e:
@@ -109,8 +123,14 @@ def parse_rfc3339(ts: str) -> datetime:
 
 
 def validate_sha256_prefix(value: str, field: str) -> None:
-    if not value.startswith("sha256:") or len(value) != 71:
-        raise AdapterError(f"{field} deve ser sha256:<hex64>; got {value!r}", "ADAPTER-INVALID-HASH")
+    """Valida sha256:<hex64> com caracteres hexadecimais válidos."""
+    if not value.startswith("sha256:"):
+        raise AdapterError(f"{field} deve começar com sha256:; got {value!r}", "ADAPTER-INVALID-HASH")
+    hex_part = value[7:]
+    if len(hex_part) != 64:
+        raise AdapterError(f"{field} deve ter 64 chars hex após sha256:; got {len(hex_part)}", "ADAPTER-INVALID-HASH")
+    if not all(c in "0123456789abcdef" for c in hex_part):
+        raise AdapterError(f"{field} deve conter apenas caracteres hexadecimais; got {value!r}", "ADAPTER-INVALID-HASH")
 
 
 def validate_sha40(value: str, field: str) -> None:
@@ -126,6 +146,12 @@ def validate_runner_kind(value: str) -> None:
 def validate_network_used(value: str) -> bool:
     if value.lower() not in ("true", "false"):
         raise AdapterError(f"network-used deve ser true|false; got {value!r}", "ADAPTER-INVALID-NETWORK")
+    return value.lower() == "true"
+
+
+def validate_local_execution(value: str) -> bool:
+    if value.lower() not in ("true", "false"):
+        raise AdapterError(f"local-execution deve ser true|false; got {value!r}", "ADAPTER-INVALID-LOCAL-EXECUTION")
     return value.lower() == "true"
 
 
@@ -183,7 +209,9 @@ def map_severity(pse_sev: str) -> str:
         "BAIXO": "low",
         "INFO": "low",
     }
-    return mapping.get(pse_sev, "low")
+    if pse_sev not in mapping:
+        raise AdapterError(f"severidade PSE desconhecida: {pse_sev}", "ADAPTER-UNKNOWN-SEVERITY")
+    return mapping[pse_sev]
 
 
 def check_sensitive_content(text: str) -> bool:
@@ -193,12 +221,11 @@ def check_sensitive_content(text: str) -> bool:
     text_lower = text.lower()
     patterns = [
         r"api[_-]?key", r"secret", r"token", r"password",
-        r"(?<!hardcoded-)\bcredential\b",  # "credential" standalone, não "hardcoded-credential"
-        r"bearer\s+[a-z0-9\-_]{20,}", r"[a-z0-9]{32,}",  # long hex/base64
-        r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",  # email
+        r"(?<!hardcoded-)\bcredential\b",
+        r"bearer\s+[a-z0-9\-_]{20,}", r"[a-z0-9]{32,}",
+        r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",
         r"-----BEGIN (RSA )?PRIVATE KEY-----", r"ssh-(rsa|ed25519)",
     ]
-    import re
     for pattern in patterns:
         if re.search(pattern, text_lower):
             return True
@@ -215,12 +242,71 @@ def sanitize_string(text: str, field_name: str) -> str:
     return text
 
 
+def validate_authorization(auth: dict, now_utc: datetime) -> None:
+    """Valida authorization completa (fail-closed)."""
+    if not isinstance(auth, dict):
+        raise AdapterError("authorization deve ser objeto", "ADAPTER-AUTH-INVALID")
+
+    # attested_by: string não vazia
+    attested_by = auth.get("attested_by")
+    if not attested_by or not isinstance(attested_by, str) or not attested_by.strip():
+        raise AdapterError("authorization.attested_by ausente ou vazio", "ADAPTER-AUTH-MISSING-ATTESTED_BY")
+
+    # scope: array não vazio
+    scope = auth.get("scope")
+    if not scope or not isinstance(scope, list) or len(scope) == 0:
+        raise AdapterError("authorization.scope ausente ou vazio", "ADAPTER-AUTH-MISSING-SCOPE")
+    for s in scope:
+        if not isinstance(s, str) or not s.strip():
+            raise AdapterError("authorization.scope deve conter strings não vazias", "ADAPTER-AUTH-INVALID-SCOPE")
+
+    # expires: RFC3339 com timezone, estritamente > now_utc
+    expires = auth.get("expires")
+    if not expires:
+        raise AdapterError("authorization.expires ausente", "ADAPTER-AUTH-MISSING-EXPIRES")
+    try:
+        exp_dt = parse_rfc3339(expires)
+    except AdapterError as e:
+        raise AdapterError(f"authorization.expires inválido: {e}", "ADAPTER-AUTH-EXPIRES-INVALID")
+    if exp_dt <= now_utc:
+        raise AdapterError(f"authorization.expirado: {expires} <= {now_utc.isoformat()}", "ADAPTER-AUTH-EXPIRED")
+
+    # target_fingerprint: sha256:<hex64>
+    target_fp = auth.get("target_fingerprint")
+    if not target_fp:
+        raise AdapterError("authorization.target_fingerprint ausente", "ADAPTER-AUTH-MISSING-TARGET_FINGERPRINT")
+    validate_sha256_prefix(target_fp, "authorization.target_fingerprint")
+
+    # synthetic_identities: boolean
+    synth = auth.get("synthetic_identities")
+    if synth is None or not isinstance(synth, bool):
+        raise AdapterError("authorization.synthetic_identities ausente ou não é boolean", "ADAPTER-AUTH-MISSING-SYNTHETIC")
+
+
+def load_pse_schema() -> tuple[dict, RefResolver]:
+    """Carrega schema canônico laudo-pse-1.0 com resolver para refs locais."""
+    schema_path = REPO / "schemas" / "laudo-pse-1.0.schema.json"
+    if not schema_path.exists():
+        # Fallback: tenta carregar do PSE clonado se existir
+        pse_schema = Path("/tmp/opencode/pse-suite/pse/schemas/laudo-pse-1.0.json")
+        if pse_schema.exists():
+            return load_json(pse_schema), None
+        raise AdapterError("schema laudo-pse-1.0 não encontrado", "ADAPTER-SCHEMA-MISSING")
+    schema = load_json(schema_path)
+    # Cria resolver com base URI file:// para resolver refs locais
+    base_uri = schema_path.absolute().as_uri()
+    resolver = RefResolver(base_uri, schema)
+    return schema, resolver
+
+
 def build_bundle_from_laudo(
     laudo: dict,
     capability_lookup: dict[str, str],
     future_assertions: set[str],
     runner_kind: str,
     network_used: bool,
+    local_execution: bool,
+    suite_commit: str,
     subject_repo: str,
     subject_commit: str,
     subject_tree_hash: str,
@@ -235,24 +321,23 @@ def build_bundle_from_laudo(
     if schema_version != "laudo-pse-1.0":
         raise AdapterError(f"schema inválido: esperado laudo-pse-1.0, got {schema_version!r}", "ADAPTER-INVALID-SCHEMA")
 
-    # Producer
-    suite_commit = artifact.get("repo_commit")
-    if not suite_commit:
-        raise AdapterError("artifact.repo_commit ausente no laudo — não pode inferir suite_commit", "ADAPTER-MISSING-PROVENANCE")
-
+    # suite_version
     suite_version = artifact.get("suite_version")
     if not suite_version:
         raise AdapterError("artifact.suite_version ausente no laudo", "ADAPTER-MISSING-PROVENANCE")
 
+    # catalog_hash
     catalog_hash = artifact.get("catalog_hash")
     if not catalog_hash:
         raise AdapterError("artifact.catalog_hash ausente no laudo", "ADAPTER-MISSING-PROVENANCE")
     catalog_hash = f"sha256:{catalog_hash}" if not catalog_hash.startswith("sha256:") else catalog_hash
 
+    # timestamp_utc
     timestamp_utc = artifact.get("timestamp_utc")
     if not timestamp_utc:
         raise AdapterError("artifact.timestamp_utc ausente no laudo", "ADAPTER-MISSING-PROVENANCE")
 
+    # execution_mode
     execution_mode_map = {
         "pse_inventory": "inventory",
         "pse_passive": "passive",
@@ -269,24 +354,45 @@ def build_bundle_from_laudo(
         raise AdapterError(f"execution_mode={execution_mode} exige authorization não-nula", "ADAPTER-AUTH-REQUIRED")
 
     if authorization is not None:
-        expires = authorization.get("expires")
-        if expires:
-            exp_dt = parse_rfc3339(expires)
-            if exp_dt <= now_utc:
-                raise AdapterError(f"authorization.expirado: {expires} <= {now_utc.isoformat()}", "ADAPTER-AUTH-EXPIRED")
+        validate_authorization(authorization, now_utc)
 
-    # Subject
+    # Subject commit: validar artifact.repo_commit contra --subject-commit
     repo_commit = artifact.get("repo_commit")
-    if not repo_commit:
-        repo_commit = subject_commit
-    else:
+    if repo_commit is not None:
         validate_sha40(repo_commit, "artifact.repo_commit")
-
-    config_fingerprint = artifact.get("config_fingerprint")
-    if not config_fingerprint:
-        config_fingerprint = scope_fingerprint
+        if repo_commit != subject_commit:
+            raise AdapterError(
+                f"artifact.repo_commit ({repo_commit}) diverge de --subject-commit ({subject_commit})",
+                "ADAPTER-SUBJECT-COMMIT-MISMATCH"
+            )
     else:
+        repo_commit = subject_commit
+
+    # config_fingerprint / scope_fingerprint
+    config_fingerprint = artifact.get("config_fingerprint")
+    if config_fingerprint is not None:
         validate_sha256_prefix(config_fingerprint, "artifact.config_fingerprint")
+        if config_fingerprint != scope_fingerprint:
+            raise AdapterError(
+                f"artifact.config_fingerprint ({config_fingerprint}) diverge de --scope-fingerprint ({scope_fingerprint})",
+                "ADAPTER-SCOPE-FINGERPRINT-MISMATCH"
+            )
+    else:
+        config_fingerprint = scope_fingerprint
+
+    # timestamp_utc
+    timestamp_utc = artifact.get("timestamp_utc")
+    if not timestamp_utc:
+        raise AdapterError("artifact.timestamp_utc ausente no laudo", "ADAPTER-MISSING-PROVENANCE")
+
+    # execution_mode
+    execution_mode_map = {
+        "pse_inventory": "inventory",
+        "pse_passive": "passive",
+        "pse_active": "active_discovery",
+    }
+    modo = artifact.get("modo", "pse_inventory")
+    execution_mode = execution_mode_map.get(modo, "inventory")
 
     # Build assertions
     assertions = []
@@ -421,7 +527,7 @@ def build_bundle_from_laudo(
         "suite_commit": suite_commit,
         "source_schema": "laudo-pse-1.0",
         "catalog_hash": catalog_hash,
-        "local_execution": False,
+        "local_execution": local_execution,
         "execution_mode": execution_mode,
         "runner_kind": runner_kind,
         "network_used": network_used,
@@ -432,7 +538,7 @@ def build_bundle_from_laudo(
     # Subject
     subject = {
         "repository": subject_repo,
-        "commit": repo_commit,
+        "commit": subject_commit,
         "tree_hash": subject_tree_hash,
         "target_lock_hash": target_lock_hash,
         "scope_fingerprint": config_fingerprint,
@@ -465,6 +571,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", required=True, help="caminho do evidence-bundle de saída (YAML)")
     parser.add_argument("--runner-kind", required=True, choices=["agent", "human", "ci"])
     parser.add_argument("--network-used", required=True, choices=["true", "false"])
+    parser.add_argument("--local-execution", required=True, choices=["true", "false"])
+    parser.add_argument("--suite-commit", required=True, help="SHA-40 do commit da suíte PSE")
     parser.add_argument("--subject-repository", required=True)
     parser.add_argument("--subject-commit", required=True)
     parser.add_argument("--subject-tree-hash", required=True)
@@ -477,6 +585,8 @@ def main(argv: list[str] | None = None) -> int:
         # Validate CLI args
         runner_kind = args.runner_kind
         network_used = validate_network_used(args.network_used)
+        local_execution = validate_local_execution(args.local_execution)
+        suite_commit = args.suite_commit
         subject_repo = args.subject_repository
         subject_commit = args.subject_commit
         subject_tree_hash = args.subject_tree_hash
@@ -484,6 +594,7 @@ def main(argv: list[str] | None = None) -> int:
         scope_fingerprint = args.scope_fingerprint
         now_utc = validate_now_utc(args.now_utc)
 
+        validate_sha40(suite_commit, "--suite-commit")
         validate_sha40(subject_commit, "--subject-commit")
         validate_sha40(subject_tree_hash, "--subject-tree-hash")
         validate_sha256_prefix(target_lock_hash, "--target-lock-hash")
@@ -497,6 +608,13 @@ def main(argv: list[str] | None = None) -> int:
 
         laudo = load_yaml(input_path) if input_path.suffix in (".yaml", ".yml") else load_json(input_path)
 
+        # Validar input contra schema PSE canônico
+        pse_schema, pse_resolver = load_pse_schema()
+        errors = validate_against_schema(laudo, pse_schema, str(input_path), "laudo-pse-1.0.schema.json", pse_resolver)
+        if errors:
+            print(f"✗ laudo PSE inválido: {errors}", file=sys.stderr)
+            return 2
+
         # Load suite manifest
         manifest = load_suite_manifest()
         capability_lookup = build_capability_lookup(manifest)
@@ -509,6 +627,8 @@ def main(argv: list[str] | None = None) -> int:
             future_assertions=future_assertions,
             runner_kind=runner_kind,
             network_used=network_used,
+            local_execution=local_execution,
+            suite_commit=suite_commit,
             subject_repo=subject_repo,
             subject_commit=subject_commit,
             subject_tree_hash=subject_tree_hash,

@@ -1,7 +1,7 @@
 schema: laudo-pse-1.0
 artifact:
   suite: pse-suite
-  suite_version: 0.3.0
+  suite_version: "0.3.0"
   schema_version: laudo-pse-1.0
   catalog_hash: 33d5be7e85777045d0088c3f5f7a91e394c83c4be33cfeda519b6073be0420e3
   repo_commit: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -9,8 +9,8 @@ artifact:
   timestamp_utc: '2026-08-20T10:00:00Z'
   modo: pse_inventory
   autorizacao: null
-veredito: violacao
-exit_code: 10
+veredito: conforme
+exit_code: 0
 packs:
 - security
 packs_desabilitados: []
@@ -19,27 +19,18 @@ relatorios: {}
 cobertura:
   catalogo_total: 30
   implementados_nos_packs: 30
-  executados: 1
+  executados: 0
 resumo:
-  total_findings: 1
-  por_severidade:
-    ALTO: 1
-checks_executados:
-- S-01
+  total_findings: 0
+  por_severidade: {}
+checks_executados: []
 checks_pulados: []
 checks_indeterminados: []
 checks_previstos: []
-findings:
-- check_id: S-03
-  pack: security
-  severidade: ALTO
-  titulo: Token exposto em log
-  descricao: API key encontrada em arquivo de log
-  recomendacao: Remover secrets de logs
-  base_legal: null
-  arquivo: null
-  linha: null
-  snippet: Bearer sk_test_SYNTHETIC_PLACEHOLDER_TOKEN_1234567890abcdef
-  trace: null
-duracao_s: 1.0
-checks_nao_habilitados: []
+findings: []
+duracao_s: 0.8
+checks_nao_habilitados:
+- id: S-05
+  motivo: Check de egress-payload requer modo passive
+- id: S-06
+  motivo: Check de hardcoded-credential requer modo passive

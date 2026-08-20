@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "repository": "danzeroum/common-controls",
   "version": "0.1.0",
-  "content_root": "sha256:7cd48d59ad0b1901f999a5cb4f7e15937dacb7d706096d4d3fbb1880deee5488",
+  "content_root": "sha256:542e2bc9ff8e2080419124bcd17c97dd3c9ed46963134d6f9360a3ff358c6f10",
   "generator": "ci/verify_release_manifest.py",
   "generator_version": "0.1.0",
   "files": [
@@ -44,7 +44,7 @@
     },
     {
       "path": "ci/normalize_pse_evidence_bundle.py",
-      "sha256": "653815e9a83c039a7f04eab569efdcc04d3f9d4c802d04ce51414e34ea262143"
+      "sha256": "19000f1a6e252fad349bc9690013b69f7a96dea14edab32aa72461e5b50c7de4"
     },
     {
       "path": "ci/validate_catalog.py",
@@ -324,39 +324,39 @@
     },
     {
       "path": "tests/fixtures/laudo-pse/invalid/invalid-authorization.yaml",
-      "sha256": "7473977f0bbcf176918f5b64f6fa24fa022aba2f779c29c57890d86ec8bc625b"
+      "sha256": "45300aa3d46c4d55d7b22739b43af886e322b3d951089e914d9e45260a111691"
     },
     {
       "path": "tests/fixtures/laudo-pse/invalid/missing-provenance.yaml",
-      "sha256": "64e45e3099030c0727a40dec9963699f7996dd3f6cfb782a30043b8916e4c7a6"
+      "sha256": "b22fa0326f51a6eae14c896bfb83c573b2b248969068d912945d8c6052102246"
     },
     {
       "path": "tests/fixtures/laudo-pse/invalid/sensitive-data.yaml",
-      "sha256": "c0ce0bb1aed1b3c103412c22805cad833d1cfc115f709858a2225bc65a4ab0d5"
+      "sha256": "2ad224e98e813b78be7497b2350978b36cea5bb88c96031df7687e52e864df1f"
     },
     {
       "path": "tests/fixtures/laudo-pse/invalid/unknown-or-invalid-check.yaml",
-      "sha256": "e1ef06f3f8cbae51298c93485350e49b727ae12344e859f8d4dd2e159484e139"
+      "sha256": "0a0924ef252abfed759fc811983965e38c887c5c46cb92287e3d0d468e43a9a3"
     },
     {
       "path": "tests/fixtures/laudo-pse/valid/errored.yaml",
-      "sha256": "f6043cbd8bfc51368294da3e5abe976baee35a87342d38128019980f4c29efe5"
+      "sha256": "ae0bbdf3377b8cce9a56471c56e317249b6eaae3f840a7abd992f98fa04f6413"
     },
     {
       "path": "tests/fixtures/laudo-pse/valid/failed.yaml",
-      "sha256": "0e050e4286f5a526554bc47b88e912acac50daaa03164569677267804d49cefa"
+      "sha256": "ee651918a1ceb7a1b62a9d549384d3d38f983bfe1a1d667a2e82fd384ccf81aa"
     },
     {
       "path": "tests/fixtures/laudo-pse/valid/not-assessed.yaml",
-      "sha256": "9122b4f7455825bd9a0c8af855ecfbd037be40f23fee67077ce2f9d58e968c6c"
+      "sha256": "32fad35b382008116fdba7c810fb10c8978f561c8f407b75279495e374299438"
     },
     {
       "path": "tests/fixtures/laudo-pse/valid/passed.yaml",
-      "sha256": "e1b06806c310114af00779cdb06dff080a5280d0ff8f9af6c3a03752eb637ee4"
+      "sha256": "94e59a9c9529d113f34212eb8e1367930259cf1b76919c22496dad545ec4df90"
     },
     {
       "path": "tests/fixtures/laudo-pse/valid/skipped.yaml",
-      "sha256": "3b3f78243af7de29b98100619874ff7b9ba27a6b5373bbc2f9e2df062862a4e3"
+      "sha256": "65f0ca84caad460f3890f8aa81d5329a1817910e7530d0515f3beeab1b9a73a1"
     },
     {
       "path": "tests/fixtures/mutations/README.md",
@@ -384,7 +384,7 @@
     },
     {
       "path": "tests/run_catalog_mutations.py",
-      "sha256": "2a988adf68c43e4811eac8ac91176a4d2b024674137c24cb72d87f28fe9446e3"
+      "sha256": "258b3ebfeca4c7f81cf45688a9c80a02e2ca13cc40c7cc1e82480aa3b6588def"
     },
     {
       "path": "tests/test_canonical_evidence.py",
@@ -408,7 +408,7 @@
     },
     {
       "path": "tests/test_normalize_pse_evidence_bundle.py",
-      "sha256": "9ea8ac7bf2ee968c61653aad48362b6fc54691274de31505b128d2c93b49fb1a"
+      "sha256": "d66e0948df294a3ffb644916bc9865f2119a0a24381b7b8fc5e473bae7f2e4b7"
     },
     {
       "path": "tests/test_release_manifest.py",

@@ -17,11 +17,26 @@ Cobre:
 13. estabilidade de evidence_fingerprint
 14. validação final por validate_evidence_contract_draft
 15. adapter não faz chamadas de rede
+16. suite_commit CLI ausente
+17. suite_commit diferente de ref autorizada
+18. artifact.repo_commit diferente de --subject-commit
+19. artifact.config_fingerprint diferente de --scope-fingerprint
+20. local_execution true e false
+21. authorization sem expires
+22. authorization sem timezone
+23. authorization sem scope
+24. authorization sem target_fingerprint
+25. authorization inválida com network_used=true
+26. input inválido contra o schema PSE canônico
+27. SHA-256 com caracteres não-hex
+28. severidade PSE desconhecida
+29. evidência de finding não eliminada silenciosamente pelo adapter
 """
 from __future__ import annotations
 
 import json
 import subprocess
+import sys
 import tempfile
 import yaml
 from datetime import datetime, timezone
@@ -39,6 +54,8 @@ INVALID_DIR = REPO / "tests" / "fixtures" / "laudo-pse" / "invalid"
 DEFAULT_CTX = {
     "runner_kind": "ci",
     "network_used": "false",
+    "local_execution": "false",
+    "suite_commit": "6dad2fd7ce93262e7f5aa449fafbc3891dfbf038",
     "subject_repository": "danzeroum/project",
     "subject_commit": "a" * 40,
     "subject_tree_hash": "b" * 40,
@@ -53,6 +70,11 @@ DEFAULT_CTX_NETWORK = {
     "now_utc": "2026-08-20T12:00:00Z",
 }
 
+DEFAULT_CTX_LOCAL = {
+    **DEFAULT_CTX,
+    "local_execution": "true",
+}
+
 
 def run_adapter(input_path: Path, ctx: dict = None, extra_args: list[str] = None) -> tuple[int, str, str]:
     """Executa adapter e retorna (exit_code, stdout, stderr)."""
@@ -61,9 +83,11 @@ def run_adapter(input_path: Path, ctx: dict = None, extra_args: list[str] = None
     args = [
         sys.executable, str(ADAPTER),
         "--input", str(input_path),
-        "--output", "/dev/null",  # não grava arquivo
+        "--output", "/dev/null",
         "--runner-kind", ctx["runner_kind"],
         "--network-used", ctx["network_used"],
+        "--local-execution", ctx["local_execution"],
+        "--suite-commit", ctx["suite_commit"],
         "--subject-repository", ctx["subject_repository"],
         "--subject-commit", ctx["subject_commit"],
         "--subject-tree-hash", ctx["subject_tree_hash"],
@@ -87,6 +111,8 @@ def run_adapter_to_file(input_path: Path, output_path: Path, ctx: dict = None) -
         "--output", str(output_path),
         "--runner-kind", ctx["runner_kind"],
         "--network-used", ctx["network_used"],
+        "--local-execution", ctx["local_execution"],
+        "--suite-commit", ctx["suite_commit"],
         "--subject-repository", ctx["subject_repository"],
         "--subject-commit", ctx["subject_commit"],
         "--subject-tree-hash", ctx["subject_tree_hash"],
@@ -139,7 +165,6 @@ class TestValidFixtures:
             code, out, err = run_adapter_to_file(VALID_DIR / "failed.yaml", tmp_path, DEFAULT_CTX_NETWORK)
             assert code == 0, f"exit={code}, stderr={err}"
             bundle = load_bundle(tmp_path)
-            # Verifica estrutura de failed
             failed_assertions = [a for a in bundle["evidence_bundle"]["assertions"] if a["status"] == "failed"]
             assert len(failed_assertions) == 1
             assert "details" in failed_assertions[0]
@@ -203,6 +228,37 @@ class TestValidFixtures:
         finally:
             tmp_path.unlink(missing_ok=True)
 
+    def test_local_execution_true(self):
+        """19. local_execution=true."""
+        # local_execution=true requires assertions to be not_assessed/not_applicable
+        code, out, err = run_adapter(VALID_DIR / "local-execution.yaml", DEFAULT_CTX_LOCAL)
+        assert code == 0, f"exit={code}, stderr={err}"
+
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False) as tmp:
+            tmp_path = Path(tmp.name)
+        try:
+            code, out, err = run_adapter_to_file(VALID_DIR / "local-execution.yaml", tmp_path, DEFAULT_CTX_LOCAL)
+            assert code == 0
+            bundle = load_bundle(tmp_path)
+            assert bundle["evidence_bundle"]["producer"]["local_execution"] is True
+        finally:
+            tmp_path.unlink(missing_ok=True)
+
+    def test_local_execution_false(self):
+        """20. local_execution=false."""
+        code, out, err = run_adapter(VALID_DIR / "passed.yaml", DEFAULT_CTX)
+        assert code == 0, f"exit={code}, stderr={err}"
+
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False) as tmp:
+            tmp_path = Path(tmp.name)
+        try:
+            code, out, err = run_adapter_to_file(VALID_DIR / "passed.yaml", tmp_path, DEFAULT_CTX)
+            assert code == 0
+            bundle = load_bundle(tmp_path)
+            assert bundle["evidence_bundle"]["producer"]["local_execution"] is False
+        finally:
+            tmp_path.unlink(missing_ok=True)
+
 
 class TestInvalidFixtures:
     """Testes com fixtures inválidas — devem falhar com código específico."""
@@ -236,12 +292,30 @@ class TestCLIValidation:
     """Testes de validação dos parâmetros CLI."""
 
     def test_missing_cli_args(self):
-        """7. contexto CLI ausente → erro."""
-        # Chama adapter sem argumentos obrigatórios
+        """16. contexto CLI ausente → erro."""
         result = subprocess.run([
             sys.executable, str(ADAPTER),
             "--input", str(VALID_DIR / "passed.yaml"),
             "--output", "/dev/null",
+        ], capture_output=True, text=True, timeout=30)
+        assert result.returncode == 2, f"esperado exit=2, got {result.returncode}: {result.stderr}"
+
+    def test_missing_suite_commit(self):
+        """16. suite_commit CLI ausente."""
+        # Chama adapter sem --suite-commit
+        result = subprocess.run([
+            sys.executable, str(ADAPTER),
+            "--input", str(VALID_DIR / "passed.yaml"),
+            "--output", "/dev/null",
+            "--runner-kind", "ci",
+            "--network-used", "false",
+            "--local-execution", "false",
+            "--subject-repository", "danzeroum/project",
+            "--subject-commit", "a" * 40,
+            "--subject-tree-hash", "b" * 40,
+            "--target-lock-hash", "sha256:" + "c" * 64,
+            "--scope-fingerprint", "sha256:" + "d" * 64,
+            "--now-utc", "2026-08-20T12:00:00Z",
         ], capture_output=True, text=True, timeout=30)
         assert result.returncode == 2, f"esperado exit=2, got {result.returncode}: {result.stderr}"
 
@@ -259,6 +333,13 @@ class TestCLIValidation:
         assert code == 2, f"esperado exit=2, got {code}: {err}"
         assert "invalid choice" in err or "ADAPTER-INVALID-NETWORK" in err
 
+    def test_invalid_local_execution(self):
+        """local-execution inválido."""
+        ctx = {**DEFAULT_CTX, "local_execution": "maybe"}
+        code, out, err = run_adapter(VALID_DIR / "passed.yaml", ctx)
+        assert code == 2, f"esperado exit=2, got {code}: {err}"
+        assert "invalid choice" in err or "ADAPTER-INVALID-LOCAL-EXECUTION" in err
+
     def test_invalid_sha_format(self):
         """SHA/formato de hash inválido."""
         ctx = {**DEFAULT_CTX, "subject_commit": "not-a-sha"}
@@ -267,19 +348,228 @@ class TestCLIValidation:
         assert "ADAPTER-INVALID-SHA" in err or "SHA-40" in err
 
     def test_invalid_timestamp_format(self):
-        """timestamp RFC3339 inválido."""
-        ctx = {**DEFAULT_CTX, "now_utc": "not-a-date"}
+        """timestamp RFC3339 inválido (sem timezone)."""
+        ctx = {**DEFAULT_CTX, "now_utc": "2026-08-20T12:00:00"}  # sem timezone
         code, out, err = run_adapter(VALID_DIR / "passed.yaml", ctx)
         assert code == 2, f"esperado exit=2, got {code}: {err}"
         assert "ADAPTER-INVALID-TIMESTAMP" in err
 
     def test_expired_authorization(self):
         """9. authorization expirada via --now-utc."""
-        # Laudo tem expires 2026-12-31, mas passamos now_utc depois
         ctx = {**DEFAULT_CTX_NETWORK, "now_utc": "2027-01-01T00:00:00Z"}
         code, out, err = run_adapter(VALID_DIR / "failed.yaml", ctx)
         assert code == 2, f"esperado exit=2, got {code}: {err}"
         assert "ADAPTER-AUTH-EXPIRED" in err
+
+    def test_authorization_missing_expires(self):
+        """21. authorization sem expires."""
+        # Precisa de fixture com authorization mas sem expires
+        # Criamos inline
+        laudo = yaml.safe_load((VALID_DIR / "failed.yaml").read_text())
+        laudo["artifact"]["autorizacao"] = {
+            "attested_by": "human@test",
+            "scope": ["test"],
+            "target_fingerprint": "sha256:" + "f" * 64,
+            "synthetic_identities": False
+            # expires ausente
+        }
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
+            f.write(yaml.dump(laudo))
+            f.flush()
+            path = Path(f.name)
+        try:
+            code, out, err = run_adapter(path, DEFAULT_CTX_NETWORK)
+            assert code == 2, f"esperado exit=2, got {code}: {err}"
+            assert "ADAPTER-AUTH-MISSING-EXPIRES" in err
+        finally:
+            path.unlink(missing_ok=True)
+
+    def test_authorization_missing_timezone(self):
+        """22. authorization sem timezone."""
+        laudo = yaml.safe_load((VALID_DIR / "failed.yaml").read_text())
+        laudo["artifact"]["autorizacao"]["expires"] = "2026-12-31T23:59:59"  # sem timezone
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
+            f.write(yaml.dump(laudo))
+            f.flush()
+            path = Path(f.name)
+        try:
+            code, out, err = run_adapter(path, DEFAULT_CTX_NETWORK)
+            assert code == 2, f"esperado exit=2, got {code}: {err}"
+            assert "ADAPTER-AUTH-EXPIRES-INVALID" in err or "ADAPTER-INVALID-TIMESTAMP" in err
+        finally:
+            path.unlink(missing_ok=True)
+
+    def test_authorization_missing_scope(self):
+        """23. authorization sem scope."""
+        laudo = yaml.safe_load((VALID_DIR / "failed.yaml").read_text())
+        laudo["artifact"]["autorizacao"]["scope"] = []
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
+            f.write(yaml.dump(laudo))
+            f.flush()
+            path = Path(f.name)
+        try:
+            code, out, err = run_adapter(path, DEFAULT_CTX_NETWORK)
+            assert code == 2, f"esperado exit=2, got {code}: {err}"
+            assert "ADAPTER-AUTH-MISSING-SCOPE" in err
+        finally:
+            path.unlink(missing_ok=True)
+
+    def test_authorization_missing_target_fingerprint(self):
+        """24. authorization sem target_fingerprint."""
+        laudo = yaml.safe_load((VALID_DIR / "failed.yaml").read_text())
+        del laudo["artifact"]["autorizacao"]["target_fingerprint"]
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
+            f.write(yaml.dump(laudo))
+            f.flush()
+            path = Path(f.name)
+        try:
+            code, out, err = run_adapter(path, DEFAULT_CTX_NETWORK)
+            assert code == 2, f"esperado exit=2, got {code}: {err}"
+            assert "ADAPTER-AUTH-MISSING-TARGET_FINGERPRINT" in err
+        finally:
+            path.unlink(missing_ok=True)
+
+    def test_authorization_invalid_with_network(self):
+        """25. authorization inválida com network_used=true."""
+        # authorization=null com network_used=true
+        laudo = yaml.safe_load((VALID_DIR / "passed.yaml").read_text())
+        laudo["artifact"]["autorizacao"] = None
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
+            f.write(yaml.dump(laudo))
+            f.flush()
+            path = Path(f.name)
+        try:
+            code, out, err = run_adapter(path, DEFAULT_CTX_NETWORK)
+            assert code == 2, f"esperado exit=2, got {code}: {err}"
+            assert "ADAPTER-AUTH-REQUIRED" in err
+        finally:
+            path.unlink(missing_ok=True)
+
+
+class TestProvenanceConsistency:
+    """Testes de consistência de proveniência."""
+
+    def test_artifact_repo_commit_mismatch(self):
+        """18. artifact.repo_commit diferente de --subject-commit."""
+        laudo = yaml.safe_load((VALID_DIR / "passed.yaml").read_text())
+        laudo["artifact"]["repo_commit"] = "b" * 40  # diferente do subject_commit (a*40)
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
+            f.write(yaml.dump(laudo))
+            f.flush()
+            path = Path(f.name)
+        try:
+            code, out, err = run_adapter(path, DEFAULT_CTX)
+            assert code == 2, f"esperado exit=2, got {code}: {err}"
+            assert "ADAPTER-SUBJECT-COMMIT-MISMATCH" in err
+        finally:
+            path.unlink(missing_ok=True)
+
+    def test_config_fingerprint_mismatch(self):
+        """19. artifact.config_fingerprint diferente de --scope-fingerprint."""
+        laudo = yaml.safe_load((VALID_DIR / "passed.yaml").read_text())
+        laudo["artifact"]["config_fingerprint"] = "sha256:" + "e" * 64  # diferente do scope_fingerprint (d*64)
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
+            f.write(yaml.dump(laudo))
+            f.flush()
+            path = Path(f.name)
+        try:
+            code, out, err = run_adapter(path, DEFAULT_CTX)
+            assert code == 2, f"esperado exit=2, got {code}: {err}"
+            assert "ADAPTER-SCOPE-FINGERPRINT-MISMATCH" in err
+        finally:
+            path.unlink(missing_ok=True)
+
+    def test_suite_commit_provided(self):
+        """16. suite_commit obrigatório via CLI."""
+        code, out, err = run_adapter(VALID_DIR / "passed.yaml", DEFAULT_CTX)
+        assert code == 0, f"exit={code}, stderr={err}"
+
+
+class TestInvalidInput:
+    """Testes de input inválido."""
+
+    def test_invalid_pse_schema(self):
+        """26. input inválido contra schema PSE canônico."""
+        # Laudo com campo obrigatório faltando
+        laudo = {
+            "schema": "laudo-pse-1.0",
+            "artifact": {
+                "suite": "pse-suite",
+                "suite_version": "0.3.0",
+                # schema_version faltando
+                "catalog_hash": "33d5be7e85777045d0088c3f5f7a91e394c83c4be33cfeda519b6073be0420e3",
+                "timestamp_utc": "2026-08-20T10:00:00Z",
+            },
+            "veredito": "conforme",
+            "exit_code": 0,
+            "packs": ["privacy"],
+            "checks_executados": ["P-01"],
+            "checks_pulados": [],
+            "checks_indeterminados": [],
+            "checks_previstos": [],
+            "findings": [],
+            "checks_nao_habilitados": [],
+        }
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
+            f.write(yaml.dump(laudo))
+            f.flush()
+            path = Path(f.name)
+        try:
+            code, out, err = run_adapter(path, DEFAULT_CTX)
+            assert code == 2, f"esperado exit=2, got {code}: {err}"
+            # O erro pode vir do schema PSE ou do adapter
+            assert "laudo PSE inválido" in err or "ADAPTER-INVALID-PSE-LAUDO" in err
+        finally:
+            path.unlink(missing_ok=True)
+
+    def test_invalid_sha256_chars(self):
+        """27. SHA-256 com caracteres não-hex."""
+        laudo = yaml.safe_load((VALID_DIR / "passed.yaml").read_text())
+        laudo["artifact"]["config_fingerprint"] = "sha256:" + "g" * 64  # 'g' não é hex
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
+            f.write(yaml.dump(laudo))
+            f.flush()
+            path = Path(f.name)
+        try:
+            code, out, err = run_adapter(path, DEFAULT_CTX)
+            assert code == 2, f"esperado exit=2, got {code}: {err}"
+            assert "ADAPTER-INVALID-HASH" in err
+        finally:
+            path.unlink(missing_ok=True)
+
+    def test_unknown_severity(self):
+        """28. severidade PSE desconhecida."""
+        laudo = yaml.safe_load((VALID_DIR / "failed.yaml").read_text())
+        laudo["findings"][0]["severidade"] = "DESCONHECIDO"
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
+            f.write(yaml.dump(laudo))
+            f.flush()
+            path = Path(f.name)
+        try:
+            code, out, err = run_adapter(path, DEFAULT_CTX_NETWORK)
+            assert code == 2, f"esperado exit=2, got {code}: {err}"
+            # O schema PSE valida o enum de severidade
+            assert "laudo PSE inválido" in err or "ADAPTER-UNKNOWN-SEVERITY" in err
+        finally:
+            path.unlink(missing_ok=True)
+
+    def test_finding_not_silently_dropped(self):
+        """29. evidência de finding não eliminada silenciosamente."""
+        # O adapter deve converter finding em failed assertion, não dropar
+        code, out, err = run_adapter(VALID_DIR / "failed.yaml", DEFAULT_CTX_NETWORK)
+        assert code == 0
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False) as tmp:
+            tmp_path = Path(tmp.name)
+        try:
+            code, out, err = run_adapter_to_file(VALID_DIR / "failed.yaml", tmp_path, DEFAULT_CTX_NETWORK)
+            assert code == 0
+            bundle = load_bundle(tmp_path)
+            failed_assertions = [a for a in bundle["evidence_bundle"]["assertions"] if a["status"] == "failed"]
+            assert len(failed_assertions) == 1
+            assert "details" in failed_assertions[0]
+            assert "severity" in failed_assertions[0]["details"]
+        finally:
+            tmp_path.unlink(missing_ok=True)
 
 
 class TestCanonicalHash:
@@ -293,11 +583,9 @@ class TestCanonicalHash:
             code, out, err = run_adapter_to_file(VALID_DIR / "passed.yaml", tmp_path)
             assert code == 0, f"exit={code}, stderr={err}"
             bundle = load_bundle(tmp_path)
-            # Verifica se hash canônico está presente e válido
             integrity = bundle["evidence_bundle"]["integrity"]
             assert "canonical_hash" in integrity
             assert integrity["canonical_hash"].startswith("sha256:")
-            # Recalcula e compara
             import canonical_evidence as ce
             recomputed = ce.compute_canonical_hash(bundle)
             assert integrity["canonical_hash"] == recomputed
@@ -312,10 +600,8 @@ class TestCanonicalHash:
             code, out, err = run_adapter_to_file(VALID_DIR / "passed.yaml", tmp_path)
             assert code == 0
             bundle = load_bundle(tmp_path)
-            # Adulterar: mudar uma assertion
             bundle["evidence_bundle"]["assertions"][0]["id"] = "TAMPERED"
             tmp_path.write_text(yaml.dump(bundle), encoding="utf-8")
-            # Valida novamente - deve falhar
             errors = validate_bundle(bundle)
             assert len(errors) > 0, "bundle adulterado deveria falhar validação de hash"
         finally:
@@ -337,7 +623,6 @@ class TestEvidenceFingerprint:
             assert code1 == 0 and code2 == 0
             b1 = load_bundle(tmp1_path)
             b2 = load_bundle(tmp2_path)
-            # Fingerprints devem ser idênticos
             for a1, a2 in zip(b1["evidence_bundle"]["assertions"], b2["evidence_bundle"]["assertions"]):
                 assert a1["evidence_fingerprint"] == a2["evidence_fingerprint"], (
                     f"fingerprint instável para {a1['id']}"
@@ -353,13 +638,10 @@ class TestEvidenceFingerprint:
         with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False) as tmp2:
             tmp2_path = Path(tmp2.name)
         try:
-            # Exec 1: timestamp original
             code1, _, _ = run_adapter_to_file(VALID_DIR / "passed.yaml", tmp1_path)
             b1 = load_bundle(tmp1_path)
             fp1 = b1["evidence_bundle"]["assertions"][0]["evidence_fingerprint"]
 
-            # Exec 2: timestamp diferente (precisa de laudo modificado)
-            # Criamos laudo temporário com timestamp diferente
             laudo = yaml.safe_load((VALID_DIR / "passed.yaml").read_text())
             laudo["artifact"]["timestamp_utc"] = "2026-08-20T11:00:00Z"
             with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as tlf:
@@ -389,7 +671,6 @@ class TestContractValidation:
         try:
             code, _, _ = run_adapter_to_file(VALID_DIR / "passed.yaml", tmp_path)
             assert code == 0
-            # Executa validador
             result = subprocess.run([
                 sys.executable, str(REPO / "ci" / "validate_evidence_contract_draft.py"),
                 "--quiet"
@@ -405,9 +686,7 @@ class TestNoNetwork:
     def test_no_network_calls(self):
         """Verifica que adapter não importa módulos de rede ou faz chamadas."""
         import normalize_pse_evidence_bundle as adapter_module
-        # Verifica imports
-        imports = adapter_module.__file__
-        code = Path(imports).read_text()
+        code = Path(adapter_module.__file__).read_text()
         forbidden = ["requests", "urllib", "http.client", "socket", "ftplib", "telnetlib"]
         for f in forbidden:
             assert f"import {f}" not in code and f"from {f}" not in code, f"import proibido: {f}"

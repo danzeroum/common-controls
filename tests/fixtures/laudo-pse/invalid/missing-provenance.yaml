@@ -2,8 +2,8 @@ schema: laudo-pse-1.0
 artifact:
   suite: pse-suite
   schema_version: laudo-pse-1.0
-  repo_commit: 6dad2fd7ce93262e7f5aa449fafbc3891dfbf038
-  config_fingerprint: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  repo_commit: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  config_fingerprint: sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
   modo: pse_inventory
   autorizacao: null
 veredito: conforme
