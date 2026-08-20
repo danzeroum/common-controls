@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "repository": "danzeroum/common-controls",
   "version": "0.1.0",
-  "content_root": "sha256:63fab4cb3d67bb7088586299cd4268f8d4c17c3bd55bb39408d0d6cb5c646727",
+  "content_root": "sha256:929500d8cc839dd2c6663fe0d00cefcfe91ca52a5654cfe824f58c5fd1444c3e",
   "generator": "ci/verify_release_manifest.py",
   "generator_version": "0.1.0",
   "files": [
@@ -384,7 +384,7 @@
     },
     {
       "path": "tests/run_catalog_mutations.py",
-      "sha256": "3a8f72b4000b065316c8325f856d6f22d8500f638ee967c501a948b374632a66"
+      "sha256": "2a988adf68c43e4811eac8ac91176a4d2b024674137c24cb72d87f28fe9446e3"
     },
     {
       "path": "tests/test_canonical_evidence.py",
