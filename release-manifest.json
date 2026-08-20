@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "repository": "danzeroum/common-controls",
   "version": "0.1.0",
-  "content_root": "sha256:dd518b28f19b4472ba9c6d04ee39300e7d64e8f81ca540f22c311be6339abacc",
+  "content_root": "sha256:e9b4640b5001b8f16d0363725342b459c6a553c1f30b1fbb72959b9bcf02dbd6",
   "generator": "ci/verify_release_manifest.py",
   "generator_version": "0.1.0",
   "files": [
@@ -84,7 +84,7 @@
     },
     {
       "path": "docs/ADR-004-pse-adapter-contract-reconciliation.md",
-      "sha256": "6de3d36c0e4fba070caefd4a2b43d80d8d8715be10701fb01f5c105ee4298722"
+      "sha256": "633afc7e78d26f65361ad06beae34288f769596e3f6c534a6161af7c11d3a2f4"
     },
     {
       "path": "docs/AGENT_EXECUTION_PROMPT.md",
@@ -165,6 +165,10 @@
     {
       "path": "pyproject.toml",
       "sha256": "e747440e7c67a8fa4c336d4087e976abbb98571950fc4f089af122c5ca2ba148"
+    },
+    {
+      "path": "reports/junit.xml",
+      "sha256": "5b1600d9872570b269bb31d4508472f89bb774346f50785e781312d90e527068"
     },
     {
       "path": "requirements-dev.txt",
