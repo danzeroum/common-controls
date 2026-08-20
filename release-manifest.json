@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "repository": "danzeroum/common-controls",
   "version": "0.1.0",
-  "content_root": "sha256:929500d8cc839dd2c6663fe0d00cefcfe91ca52a5654cfe824f58c5fd1444c3e",
+  "content_root": "sha256:7cd48d59ad0b1901f999a5cb4f7e15937dacb7d706096d4d3fbb1880deee5488",
   "generator": "ci/verify_release_manifest.py",
   "generator_version": "0.1.0",
   "files": [
@@ -332,7 +332,7 @@
     },
     {
       "path": "tests/fixtures/laudo-pse/invalid/sensitive-data.yaml",
-      "sha256": "e26d77c1f2a04bfca1e5eb556459816b7678d51b3025a43f48c72e8886bbad02"
+      "sha256": "c0ce0bb1aed1b3c103412c22805cad833d1cfc115f709858a2225bc65a4ab0d5"
     },
     {
       "path": "tests/fixtures/laudo-pse/invalid/unknown-or-invalid-check.yaml",
