@@ -439,10 +439,10 @@ def m18_workflow_removes_mutation_step(tmp_path: Path) -> Path:
     shutil.copy(REPO / ".github" / "workflows" / "validate.yml",
                 wf_dir / "validate.yml")
     wf_path = wf_dir / "validate.yml"
-    
+
     import yaml
     doc = yaml.safe_load(wf_path.read_text(encoding="utf-8"))
-    
+
     # Encontra o job 'validate' e remove o step que contém o comando de mutação
     for job_name, job in (doc.get("jobs") or {}).items():
         steps = job.get("steps") or []
@@ -454,7 +454,7 @@ def m18_workflow_removes_mutation_step(tmp_path: Path) -> Path:
                 continue  # pula este step (remove)
             new_steps.append(step)
         job["steps"] = new_steps
-    
+
     wf_path.write_text(yaml.dump(doc, sort_keys=False, allow_unicode=True), encoding="utf-8")
     return repo
 
