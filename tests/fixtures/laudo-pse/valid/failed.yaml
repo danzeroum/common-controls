@@ -1,0 +1,52 @@
+schema: laudo-pse-1.0
+artifact:
+  suite: pse-suite
+  suite_version: 0.3.0
+  schema_version: laudo-pse-1.0
+  catalog_hash: 33d5be7e85777045d0088c3f5f7a91e394c83c4be33cfeda519b6073be0420e3
+  repo_commit: 6dad2fd7ce93262e7f5aa449fafbc3891dfbf038
+  config_fingerprint: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+  timestamp_utc: '2026-08-20T10:00:00Z'
+  modo: pse_passive
+  autorizacao:
+    attested_by: human@test.local
+    scope:
+    - pse_passive
+    expires: '2026-12-31T23:59:59Z'
+    target_fingerprint: sha256:5555555555555555555555555555555555555555555555555555555555555555
+    synthetic_identities: false
+veredito: violacao
+exit_code: 10
+packs:
+- security
+packs_desabilitados: []
+packs_fora_de_escopo: []
+relatorios: {}
+cobertura:
+  catalogo_total: 30
+  implementados_nos_packs: 30
+  executados: 2
+resumo:
+  total_findings: 1
+  por_severidade:
+    ALTO: 1
+checks_executados:
+- S-01
+- S-02
+checks_pulados: []
+checks_indeterminados: []
+checks_previstos: []
+findings:
+- check_id: S-03
+  pack: security
+  severidade: ALTO
+  titulo: PII em payload de erro
+  descricao: Endpoint /api/v1/users expõe email no corpo de erro 500
+  recomendacao: Sanitizar mensagens de erro em produção
+  base_legal: null
+  arquivo: null
+  linha: null
+  snippet: null
+  trace: null
+duracao_s: 2.3
+checks_nao_habilitados: []

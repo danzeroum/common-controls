@@ -1,0 +1,45 @@
+schema: laudo-pse-1.0
+artifact:
+  suite: pse-suite
+  suite_version: 0.3.0
+  schema_version: laudo-pse-1.0
+  catalog_hash: 33d5be7e85777045d0088c3f5f7a91e394c83c4be33cfeda519b6073be0420e3
+  repo_commit: 6dad2fd7ce93262e7f5aa449fafbc3891dfbf038
+  config_fingerprint: sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+  timestamp_utc: '2026-08-20T10:00:00Z'
+  modo: pse_inventory
+  autorizacao: null
+veredito: violacao
+exit_code: 10
+packs:
+- security
+packs_desabilitados: []
+packs_fora_de_escopo: []
+relatorios: {}
+cobertura:
+  catalogo_total: 30
+  implementados_nos_packs: 30
+  executados: 1
+resumo:
+  total_findings: 1
+  por_severidade:
+    ALTO: 1
+checks_executados:
+- S-01
+checks_pulados: []
+checks_indeterminados: []
+checks_previstos: []
+findings:
+- check_id: S-03
+  pack: security
+  severidade: ALTO
+  titulo: Token exposto em log
+  descricao: API key encontrada em arquivo de log
+  recomendacao: Remover secrets de logs
+  base_legal: null
+  arquivo: null
+  linha: null
+  snippet: Bearer sk_test_SYNTHETIC_PLACEHOLDER_TOKEN_1234567890abcdef
+  trace: null
+duracao_s: 1.0
+checks_nao_habilitados: []

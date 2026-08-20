@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "repository": "danzeroum/common-controls",
   "version": "0.1.0",
-  "content_root": "sha256:ffd928738e8f625da08ac9400577536324bd54edf2580a0783b78ac6d4b2b415",
+  "content_root": "sha256:a8b6ec9e98ac6f10fd995973567a511922201b795da39ea983cd82bd7f5279fb",
   "generator": "ci/verify_release_manifest.py",
   "generator_version": "0.1.0",
   "files": [
@@ -317,6 +317,42 @@
     {
       "path": "tests/fixtures/invalid/suite-manifest-release-not-verified.yaml",
       "sha256": "4214aab07f24c766165a48496c239aada9f2990c63f17eec678bc8d7c97e5fde"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/invalid/invalid-authorization.yaml",
+      "sha256": "7473977f0bbcf176918f5b64f6fa24fa022aba2f779c29c57890d86ec8bc625b"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/invalid/missing-provenance.yaml",
+      "sha256": "64e45e3099030c0727a40dec9963699f7996dd3f6cfb782a30043b8916e4c7a6"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/invalid/sensitive-data.yaml",
+      "sha256": "e26d77c1f2a04bfca1e5eb556459816b7678d51b3025a43f48c72e8886bbad02"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/invalid/unknown-or-invalid-check.yaml",
+      "sha256": "e1ef06f3f8cbae51298c93485350e49b727ae12344e859f8d4dd2e159484e139"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/valid/errored.yaml",
+      "sha256": "f6043cbd8bfc51368294da3e5abe976baee35a87342d38128019980f4c29efe5"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/valid/failed.yaml",
+      "sha256": "0e050e4286f5a526554bc47b88e912acac50daaa03164569677267804d49cefa"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/valid/not-assessed.yaml",
+      "sha256": "9122b4f7455825bd9a0c8af855ecfbd037be40f23fee67077ce2f9d58e968c6c"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/valid/passed.yaml",
+      "sha256": "e1b06806c310114af00779cdb06dff080a5280d0ff8f9af6c3a03752eb637ee4"
+    },
+    {
+      "path": "tests/fixtures/laudo-pse/valid/skipped.yaml",
+      "sha256": "3b3f78243af7de29b98100619874ff7b9ba27a6b5373bbc2f9e2df062862a4e3"
     },
     {
       "path": "tests/fixtures/mutations/README.md",
