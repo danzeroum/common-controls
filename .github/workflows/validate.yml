@@ -101,13 +101,6 @@ jobs:
           printf '%s\n' "$code" > reports/validate_evidence_contract_draft.exitcode
           exit "$code"
 
-      - name: Regenerate release manifest
-        run: |
-          python ci/verify_release_manifest.py --generate 2>&1 | tee reports/generate_manifest.log
-          code=${PIPESTATUS[0]}
-          printf '%s\n' "$code" > reports/generate_manifest.exitcode
-          exit "$code"
-
       - name: Verify release manifest
         continue-on-error: true
         shell: bash
