@@ -1,4 +1,5 @@
-# Fixture INVÁLIDA — evidence-bundle com failed sem details.
+# Fixture INVÁLIDA — network_used=true com authorization:null.
+# O schema exige authorization não-null (objeto) quando network_used=true.
 evidence_bundle:
   schema_version: evidence-bundle/v1-draft
   producer:
@@ -11,12 +12,7 @@ evidence_bundle:
     execution_mode: passive
     runner_kind: ci
     network_used: true
-    authorization:
-      attested_by: "human@domain"
-      scope: ["pse_passive"]
-      expires: "2026-12-31T23:59:59Z"
-      target_fingerprint: "sha256:5555555555555555555555555555555555555555555555555555555555555555"
-      synthetic_identities: false
+    authorization: null  # null com rede — deve falhar
   subject:
     repository: danzeroum/project
     commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -24,11 +20,10 @@ evidence_bundle:
     target_lock_hash: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
     scope_fingerprint: "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
   assertions:
-    - id: S-03
-      status: failed
-      evidence_fingerprint: "sha256:6666666666666666666666666666666666666666666666666666666666666666"
-      capability: security.pii-in-error
+    - id: P-01
+      status: passed
+      evidence_fingerprint: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      capability: privacy.log-pii-masking
       executed_at: "2026-08-17T11:55:00Z"
-      # details ausente — deve falhar
   integrity:
-    canonical_hash: "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+    canonical_hash: "sha256:2222222222222222222222222222222222222222222222222222222222222222"

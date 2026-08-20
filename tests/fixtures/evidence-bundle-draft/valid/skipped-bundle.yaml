@@ -25,4 +25,4 @@ evidence_bundle:
       executed_at: "2026-08-17T11:55:00Z"
       reason: "N/A declarado: sem endpoint de consentimento no escopo"
   integrity:
-    canonical_hash: "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+    canonical_hash: "sha256:1073f2d5128fe03b033ffdc61b640bd6e04d8a8201935fc0457f3467fec51f68"

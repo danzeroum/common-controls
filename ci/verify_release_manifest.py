@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """Verificador de release-manifest — garante que arquivos versionados batem.
 
-A Sprint 4 fecha a divergência entre o ZIP validado localmente e o conteúdo
-efetivamente integrado no GitHub: o workflow .github/workflows/validate.yml
-foi declarado nas Sprints 2 e 3, mas não chegou ao repositório remoto.
+O release-manifest.json é um manifesto de pacote/release (Opção B,
+ADR-003): descreve o conteúdo do pacote, NÃO atesta o commit que o contém.
 
-O release-manifest.json lista todos os arquivos versionados relevantes com
-seu SHA-256. O verificador:
-  1. Lista arquivos via `git ls-files` (fonte canônica do que é versionado)
-  2. Calcula SHA-256 de cada arquivo
-  3. Compara com release-manifest.json (se existir) ou gera um novo
+Semântica (ADR-003):
+  - ``content_root``: SHA-256 dos pares ``path:sha256`` ordenados por path
+    de todos os arquivos em ``files[]``. Não inclui ``release-manifest.json``
+    (excluído de ``files[]``). Não é circular: não referencia o commit.
+  - ``release-manifest.json`` é excluído de ``files[]`` (auto-referência
+    impossível) mas permanece em ``required_paths`` (existência checada).
+  - O verificador valida: content_root, hashes individuais, extras/omitidos,
+    required_paths. Divergência em qualquer regra é ERROR (exit 1).
 
 Modo de uso:
   python ci/verify_release_manifest.py           # valida, sai 1 se divergente
@@ -17,8 +19,8 @@ Modo de uso:
   python ci/verify_release_manifest.py --check    # alias para validar
 
 Exit codes:
-  0  manifesto em dia (todos os hashes batem)
-  1  manifesto divergente (hash mismatch, arquivo faltando, arquivo extra)
+  0  manifesto em dia (todos os hashes batem, content_root válido)
+  1  manifesto divergente (hash mismatch, arquivo faltando, arquivo extra, content_root inválido)
   2  erro de execução (git indisponível, YAML ilegível)
 """
 from __future__ import annotations
@@ -48,12 +50,15 @@ REQUIRED_PATHS = [
     "ci/generate_control_coverage.py",
     "ci/verify_release_manifest.py",
     "ci/verify_delivery_package.py",
+    "ci/canonical_evidence.py",
+    "ci/validate_evidence_contract_draft.py",
     "schemas/control.schema.json",
     "schemas/control-catalog.schema.json",
     "schemas/suite-mapping.schema.json",
     "schemas/control-assessment.schema.json",
     "schemas/suite-capabilities.schema.json",
     "schemas/evidence-input.schema.json",
+    "schemas/evidence-bundle-v1-draft.schema.json",
     "controls/dependency-governance.yaml",
     "mappings/pse-suite.yaml",
     "suites/pse-suite/v0.3.0.yaml",
@@ -64,9 +69,15 @@ REQUIRED_PATHS = [
     "tests/test_workflow_static.py",
     "tests/test_normalize_evidence_input.py",
     "tests/test_delivery_package.py",
+    "tests/test_canonical_evidence.py",
+    "tests/test_evidence_contract_draft.py",
+    "tests/test_release_manifest.py",
     "tests/run_catalog_mutations.py",
     "docs/generated/control-coverage.md",
     "docs/PROJECT_SUITE_CONTRACT_COMPATIBILITY.md",
+    "docs/ADR-001-evidence-contract-boundary.md",
+    "docs/ADR-002-canonical-evidence-integrity.md",
+    "docs/ADR-003-release-manifest-semantics.md",
     "docs/SPRINT_1_IMPLEMENTATION.md",
     "docs/SPRINT_1_TEST_EVIDENCE.md",
     "docs/SPRINT_2_IMPLEMENTATION.md",
@@ -76,6 +87,7 @@ REQUIRED_PATHS = [
     "docs/SPRINT_4_IMPLEMENTATION.md",
     "docs/SPRINT_4_TEST_EVIDENCE.md",
     "docs/SPRINT_4_POST_MERGE_CHECKLIST.md",
+    "docs/SPRINT_4_CLOSEOUT.md",
     "requirements.txt",
     "requirements-dev.txt",
     "pyproject.toml",
@@ -139,28 +151,27 @@ def get_version(repo: Path) -> str:
     return v
 
 
-def get_commit(repo: Path) -> str:
-    """SHA do commit atual, ou placeholder se detached."""
-    try:
-        result = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            cwd=repo, capture_output=True, text=True, timeout=10,
-        )
-        if result.returncode == 0:
-            return result.stdout.strip()
-    except Exception:
-        pass
-    return "unknown"
+def compute_content_root(files: list[dict]) -> str:
+    """Computa content_root: SHA-256 dos pares path:sha256 ordenados por path.
+
+    Não-circular: release-manifest.json é excluído de files[] antes de
+    chamar esta função. O resultado não referencia o commit que contém
+    o manifesto.
+    """
+    pairs = sorted(f"{f['path']}:{f['sha256']}" for f in files)
+    payload = "\n".join(pairs).encode("utf-8")
+    return f"sha256:{hashlib.sha256(payload).hexdigest()}"
 
 
 def generate_manifest(repo: Path) -> dict:
-    """Gera o manifesto de release."""
+    """Gera o manifesto de release (pacote, não commit)."""
     files = collect_files(repo)
+    files = [f for f in files if f["path"] != "release-manifest.json"]
     return {
         "manifest_version": MANIFEST_VERSION,
         "repository": "danzeroum/common-controls",
         "version": get_version(repo),
-        "generated_from_commit": get_commit(repo),
+        "content_root": compute_content_root(files),
         "generator": "ci/verify_release_manifest.py",
         "generator_version": VERIFY_VERSION,
         "files": files,
@@ -168,48 +179,65 @@ def generate_manifest(repo: Path) -> dict:
     }
 
 
-def validate_manifest(repo: Path, manifest: dict) -> list[str]:
-    """Valida que o manifesto reflete o estado atual do repositório.
+def validate_manifest_data(manifest: dict,
+                           actual_files: dict[str, str]) -> list[str]:
+    """Valida manifesto contra dados coletados (pure function para testes).
 
-    Retorna lista de erros (vazia se OK).
+    ``actual_files`` mapeia path -> sha256 de TODOS arquivos versionados
+    (incluindo release-manifest.json).
+
+    Retorna lista de erros (vazia se OK). Sem warnings — divergência é erro.
+
+    Regras (ADR-003):
+      0. content_root deve bater com o recomputado de files[]
+      1. required_paths devem existir em actual_files
+      2. hashes em files[] devem bater com actual_files; extras detectados
+      3. arquivos versionados (exceto release-manifest.json) devem estar em files[]
     """
     errors: list[str] = []
+    manifest_files = manifest.get("files", [])
+    manifest_paths = {f["path"] for f in manifest_files}
 
-    # 1. Arquivos obrigatórios devem estar no manifesto
-    manifest_paths = {f["path"] for f in manifest.get("files", [])}
+    # 0. content_root deve bater com o recomputado
+    stored_root = manifest.get("content_root", "")
+    recomputed_root = compute_content_root(manifest_files)
+    if stored_root != recomputed_root:
+        errors.append(
+            f"MANIFEST-CONTENT-ROOT-MISMATCH: manifesto={stored_root[:24]}... "
+            f"recomputado={recomputed_root[:24]}..."
+        )
+
+    # 1. Arquivos obrigatórios devem existir (versionados)
     for req in manifest.get("required_paths", REQUIRED_PATHS):
-        if req not in manifest_paths:
-            # Verifica se o arquivo existe no disco (pode não ter sido criado ainda)
-            if not (repo / req).exists():
-                errors.append(f"REQUIRED-FILE-MISSING: {req} — arquivo obrigatório não existe no repositório")
-            elif req not in manifest_paths:
-                errors.append(f"MANIFEST-FILE-MISSING: {req} — arquivo existe mas não está no manifesto")
+        if req not in actual_files:
+            errors.append(f"REQUIRED-FILE-MISSING: {req} — obrigatório não versionado")
 
-    # 2. Hashes devem bater (exceto o próprio release-manifest.json,
-    # que é auto-referente — seu hash muda quando o conteúdo muda)
-    actual_files = {f["path"]: f["sha256"] for f in collect_files(repo)}
-    for mf_file in manifest.get("files", []):
+    # 2. Hashes no manifesto devem bater; extras detectados
+    for mf_file in manifest_files:
         path = mf_file["path"]
-        expected_hash = mf_file["sha256"]
-        if path == "release-manifest.json":
-            continue  # auto-referente — não pode bater com seu próprio hash
+        expected = mf_file["sha256"]
         if path not in actual_files:
-            errors.append(f"MANIFEST-EXTRA-FILE: {path} — está no manifesto mas não é versionado")
-        elif actual_files[path] != expected_hash:
-            errors.append(f"HASH-MISMATCH: {path} — manifesto={expected_hash[:16]}... atual={actual_files[path][:16]}...")
+            errors.append(f"MANIFEST-EXTRA-FILE: {path} — no manifesto mas não versionado")
+        elif actual_files[path] != expected:
+            errors.append(
+                f"HASH-MISMATCH: {path} — manifesto={expected[:16]}... "
+                f"atual={actual_files[path][:16]}..."
+            )
 
-    # 3. Arquivos no repositório devem estar no manifesto
+    # 3. Arquivos versionados (exceto release-manifest.json) devem estar no manifesto
     for path in actual_files:
+        if path == "release-manifest.json":
+            continue
         if path not in manifest_paths:
-            # Arquivo versionado mas não está no manifesto — só é erro se for um
-            # arquivo novo que deveria ser manifesto. Para evitar ruído, só
-            # reporta se o arquivo está em REQUIRED_PATHS ou foi adicionado
-            # recentemente (não há como saber isso aqui, então reportamos todos).
-            # Para evitar falso positivo em arquivos de teste, só reportamos
-            # se o arquivo NÃO estiver em manifest_paths (já coberto acima).
-            pass
+            errors.append(f"MANIFEST-OMITTED-FILE: {path} — versionado mas não no manifesto")
 
     return errors
+
+
+def validate_manifest(repo: Path, manifest: dict) -> list[str]:
+    """Valida que o manifesto reflete o estado atual do repositório."""
+    actual_files = {f["path"]: f["sha256"] for f in collect_files(repo)}
+    return validate_manifest_data(manifest, actual_files)
 
 
 def main(argv: list[str] | None = None) -> int:
