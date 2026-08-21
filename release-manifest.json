@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "repository": "danzeroum/common-controls",
   "version": "0.1.0",
-  "content_root": "sha256:3542f68545c8fd474ae942419e452a3b7a243efca5b14aec2a5b65e139dfbd65",
+  "content_root": "sha256:66cb8178ffcea89aa7a03651b8285d82850c4437002b0d26b8fb8c903a4a4254",
   "generator": "ci/verify_release_manifest.py",
   "generator_version": "0.1.0",
   "files": [
@@ -40,11 +40,11 @@
     },
     {
       "path": "ci/lib/control_assessment_builder.py",
-      "sha256": "97e03b349fdab51ee490acdd6e5910c7beb9478165bf57f4c7625ed55e62fc8f"
+      "sha256": "208c7e03d7f562e17a45c047d55e6661f37e9f8856f959db4598cad7924d8225"
     },
     {
       "path": "ci/normalize_evidence_bundle_to_assessment.py",
-      "sha256": "d4aeae5da00fecf0b56493587b21b99932eb5dfcc16065119426f591989950b1"
+      "sha256": "c13ae51ed6e00f15f620aa5647ead611eccce0d0abe8060b19a4746f4f16da7a"
     },
     {
       "path": "ci/normalize_evidence_input.py",

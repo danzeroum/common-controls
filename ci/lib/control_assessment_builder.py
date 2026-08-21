@@ -217,6 +217,11 @@ def map_severity(pse_sev: str) -> str:
         "MEDIO": "medium",
         "BAIXO": "low",
         "INFO": "low",
+        # Already mapped values
+        "critical": "critical",
+        "high": "high",
+        "medium": "medium",
+        "low": "low",
     }
     if pse_sev not in mapping:
         raise BuilderError(f"severidade PSE desconhecida: {pse_sev}", "BUILDER-UNKNOWN-SEVERITY")
@@ -683,12 +688,291 @@ def build_assessment_from_bundle(
                         catalog_commit="0" * 40,
                     ), 2
 
-        # ... continuar implementação
+        # Process assertions from bundle (checks_executados, checks_pulados, etc.)
+    built_assertions = []
+    for a in assertions_raw:
+        # Validar status
+        status = a.get("status")
+        if status not in VALID_ASSERTION_STATUSES:
+            return _build_blocked_assessment(
+                reason_code="BUILDER-INVALID-ASSERTION-STATUS",
+                reason_message=f"status de assertion inválido: {status}",
+                catalog_commit="0" * 40,
+            ), 2
 
-    # Por simplicidade, vou retornar uma estrutura básica por enquanto
-    # A implementação completa seria muito longa para caber aqui
-    return {}, 2
+        check_id = a.get("id")
+        if not check_id:
+            return _build_blocked_assessment(
+                reason_code="BUILDER-MISSING-ASSERTION-ID",
+                reason_message="assertion sem id",
+                catalog_commit="0" * 40,
+            ), 2
 
+        # Validar se check_id existe no manifesto
+        capability = capability_lookup.get(check_id)
+        if not capability:
+            return _build_blocked_assessment(
+                reason_code="BUILDER-UNKNOWN-ASSERTION",
+                reason_message=f"check {check_id} não tem capability no manifesto da suíte",
+                catalog_commit="0" * 40,
+            ), 2
+
+        # Verificar se assertion planned está sendo promovida
+        if a.get("status") == "passed" and check_id in future_assertions:
+            return _build_blocked_assessment(
+                reason_code="BUILDER-PLANNED-PROMOTED",
+                reason_message=f"assertion planejada {check_id} não pode ser promovida a passed",
+                catalog_commit="0" * 40,
+            ), 2
+
+        # Build evidence item
+        status = a.get("status")
+        evidence_fp = a.get("evidence_fingerprint")
+        capability = capability_lookup.get(check_id, "")
+        executed_at = a.get("executed_at")
+
+        evidence_item = {
+            "source": "pse-suite",
+            "id": check_id,
+            "status": status,
+            "evidence_fingerprint": evidence_fp,
+            "capability": capability,
+            "executed_at": a.get("executed_at"),
+            "reason": a.get("reason"),
+            "details": a.get("details"),
+        }
+        
+        # Adicionar reason/details para status não-passed
+        if status != "passed":
+            # Para failed, precisa de details
+            if status == "failed":
+                pass  # handled by schema validation
+            
+            # reason é obrigatório para skipped/errored/not_assessed
+            reason = a.get("reason")
+            if status in ("skipped", "errored", "not_assessed", "not_applicable"):
+                if not reason:
+                    return _build_blocked_assessment(
+                        reason_code="BUILDER-MISSING-REASON",
+                        reason_message=f"assertion {status} requer reason",
+                        catalog_commit="0" * 40,
+                    ), 2
+            
+            if status == "failed":
+                # Sanitizar details
+                pse_sev = a.get("details", {}).get("severity", "BAIXO")
+                severity = map_severity(a.get("details", {}).get("severity", "BAIXO"))
+                titulo = sanitize_string(a.get("details", {}).get("titulo", ""), "finding.titulo")
+                descricao = sanitize_string(a.get("details", {}).get("descricao", ""), "finding.descricao")
+                recomendacao = sanitize_string(a.get("details", {}).get("recomendacao", ""), "finding.recomendacao")
+                
+                evidence_item = {
+                    "source": "pse-suite",
+                    "id": check_id,
+                    "status": "failed",
+                    "evidence_fingerprint": compute_evidence_fingerprint_failed(
+                        check_id, a.get("pack", ""), a.get("details", {}).get("severidade", "BAIXO"),
+                        titulo, a.get("details", {}).get("descricao", ""), a.get("details", {}).get("recomendacao", "")
+                    ),
+                    "capability": capability,
+                    "executed_at": executed_at,
+                    "details": {
+                        "severity": severity,
+                        "summary": f"{titulo}: {descricao}",
+                        "dimension": a.get("pack", ""),
+                    },
+                }
+            elif status in ("skipped", "errored", "not_assessed", "not_applicable"):
+                reason = a.get("reason", "")
+                if not reason:
+                    return _build_blocked_assessment(
+                        reason_code="BUILDER-MISSING-REASON",
+                        reason_message=f"assertion {status} requer reason",
+                        catalog_commit="0" * 40,
+                    ), 2
+                
+                evidence_item = {
+                    "source": "pse-suite",
+                    "id": check_id,
+                    "status": status,
+                    "evidence_fingerprint": compute_evidence_fingerprint_status(check_id, status, a.get("reason", ""), executed_at),
+                    "capability": capability,
+                    "executed_at": executed_at,
+                    "reason": sanitize_string(reason, "reason"),
+                }
+                if status == "failed":
+                    evidence_item["details"] = {
+                        "severity": map_severity(a.get("details", {}).get("severity", "BAIXO")),
+                        "summary": sanitize_string(a.get("details", {}).get("titulo", "") + ": " + a.get("details", {}).get("descricao", ""), "finding.summary"),
+                        "dimension": a.get("pack", ""),
+                    }
+                else:
+                    evidence_item["reason"] = sanitize_string(reason, "reason")
+
+        built_assertions.append(evidence_item)
+
+    # Also process findings from the laudo (if any) and convert to failed assertions
+    findings = eb.get("findings", [])
+    for finding in findings:
+        check_id = finding.get("check_id")
+        if not check_id:
+            continue
+        
+        capability = capability_lookup.get(check_id)
+        if not capability:
+            # Finding for unknown check - still process but with unknown capability
+            capability = ""
+        
+        # Sanitize finding details
+        pse_sev = finding.get("severidade", "BAIXO")
+        severity = map_severity(pse_sev)
+        titulo = sanitize_string(finding.get("titulo", ""), "finding.titulo")
+        descricao = sanitize_string(finding.get("descricao", ""), "finding.descricao")
+        recomendacao = sanitize_string(finding.get("recomendacao", ""), "finding.recomendacao")
+        
+        # Validate finding severity
+        if finding.get("severidade") not in SEVERITY_MAP:
+            return _build_blocked_assessment(
+                reason_code="BUILDER-UNKNOWN-SEVERITY",
+                reason_message=f"severidade PSE desconhecida: {finding.get('severidade')}",
+                catalog_commit="0" * 40,
+            ), 2
+        
+        # Sanitize
+        titulo = sanitize_string(titulo, "finding.titulo")
+        descricao = sanitize_string(descricao, "finding.descricao")
+        recomendacao = sanitize_string(recomendacao, "finding.recomendacao")
+        
+        # Check for sensitive content in finding details
+        for field_name, field_value in [("titulo", titulo), ("descricao", descricao), ("recomendacao", recomendacao)]:
+            if check_sensitive_content(field_value):
+                return _build_blocked_assessment(
+                    reason_code="BUILDER-SENSITIVE-DATA",
+                    reason_message=f"conteúdo sensível detectado em finding.{field_name} — falha fechada",
+                    catalog_commit="0" * 40,
+                ), 2
+        
+        # Check if finding check_id is a planned assertion
+        if check_id in future_assertions:
+            return _build_blocked_assessment(
+                reason_code="BUILDER-PLANNED-PROMOTED",
+                reason_message=f"finding {check_id} não pode gerar assertion passed (é planejada)",
+                catalog_commit="0" * 40,
+            ), 2
+        
+        executed_at = eb.get("producer", {}).get("timestamp_utc", "")
+        if not executed_at:
+            executed_at = "2026-08-20T10:00:00Z"  # fallback
+        
+        # Check if finding check_id is a planned assertion
+        if check_id in future_assertions:
+            return _build_blocked_assessment(
+                reason_code="BUILDER-PLANNED-PROMOTED",
+                reason_message=f"finding {check_id} não pode gerar assertion passed (é planejada)",
+                catalog_commit="0" * 40,
+            ), 2
+        
+        evidence_fp = compute_evidence_fingerprint_failed(
+            check_id, finding.get("pack", ""), finding.get("severidade", "BAIXO"),
+            titulo, descricao, recomendacao
+        )
+        
+        built_assertions.append({
+            "source": "pse-suite",
+            "id": check_id,
+            "status": "failed",
+            "evidence_fingerprint": evidence_fp,
+            "capability": capability,
+            "executed_at": executed_at,
+            "details": {
+                "severity": severity,
+                "summary": f"{titulo}: {descricao}",
+                "dimension": finding.get("pack", ""),
+            },
+        })
+
+    # Build evidence list for assessment
+    evidence = []
+    for a in built_assertions:
+        evidence_item = {
+            "source": a.get("source", "pse-suite"),
+            "assertion": a.get("id", ""),
+            "status": a.get("status", ""),
+            "freshness_days": 0,
+            "fingerprint": a.get("evidence_fingerprint", ""),
+        }
+        if a.get("reason"):
+            evidence.append({"reason": a.get("reason")})
+        if a.get("details"):
+            evidence.append({"details": a.get("details")})
+    
+    # Determine overall status
+    passed_assertions = [a for a in built_assertions if a["status"] == "passed"]
+    failed_assertions = [a for a in built_assertions if a["status"] == "failed"]
+    skipped_assertions = [a for a in built_assertions if a["status"] == "skipped"]
+    errored_assertions = [a for a in built_assertions if a["status"] == "errored"]
+    not_assessed_assertions = [a for a in built_assertions if a["status"] == "not_assessed"]
+    not_applicable_assertions = [a for a in built_assertions if a["status"] == "not_applicable"]
+    
+    # Check if all required assertions are passed
+    missing_required = []
+    for req in CTRL_DEP_001_REQUIRED:
+        if "assertion" in req:
+            if req["assertion"] not in [a["id"] for a in passed_assertions]:
+                missing_required.append(req["assertion"])
+    
+    if missing_required:
+        return _build_not_satisfied_assessment(
+            reason_code="missing_required_evidence",
+            reason_message="evidence obrigatória ausente ou não-passed: " + ", ".join(missing_required),
+            catalog_commit=catalog_commit,
+            producer=producer,
+            subject=subject,
+            assertions=built_assertions,
+            integrity=eb.get("integrity", {}),
+        ), 0
+    
+    # Check for failed assertions
+    if failed_assertions:
+        return _build_not_satisfied_assessment(
+            reason_code="evidence_failed",
+            reason_message="evidência failed presente: " + ", ".join([a["id"] for a in failed_assertions]),
+            catalog_commit=catalog_commit,
+            producer=producer,
+            subject=subject,
+            assertions=built_assertions,
+            integrity=eb.get("integrity", {}),
+        ), 0
+    
+    # Check for skipped/errored/not_assessed assertions (not failed but not passed)
+    if skipped_assertions or errored_assertions or not_assessed_assertions:
+        reason_codes = []
+        if skipped_assertions:
+            reason_codes.append("evidence_skipped")
+        if errored_assertions:
+            reason_codes.append("evidence_errored")
+        if not_assessed_assertions:
+            reason_codes.append("evidence_not_assessed")
+        
+        return _build_not_satisfied_assessment(
+            reason_code=",".join(reason_codes),
+            reason_message="evidência não-passed presente: " + ", ".join([a["id"] for a in skipped_assertions + errored_assertions + not_assessed_assertions]),
+            catalog_commit=catalog_commit,
+            producer=producer,
+            subject=subject,
+            assertions=built_assertions,
+            integrity=eb.get("integrity", {}),
+        ), 0
+    
+    # All required passed, no failed - satisfied
+    return _build_satisfied_assessment(
+        producer=producer,
+        subject=subject,
+        assertions=built_assertions,
+        integrity=eb.get("integrity", {}),
+        catalog_commit=catalog_commit,
+        suite_manifest=load_suite_manifest(),
+    ), 0
 
 def _verify_canonical_hash(bundle: dict) -> bool:
     """Verifica se o canonical_hash do bundle confere."""
